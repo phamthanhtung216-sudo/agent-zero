@@ -10,7 +10,7 @@ Agent Zero là bộ hướng dẫn, file bộ nhớ và công cụ kiểm tra ch
 
 **Bản hiện tại: v0.8.1 · Bộ cài Windows · Hướng dẫn bằng tiếng Việt**
 
-[Tải bộ cài ZIP](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest) · [Hướng dẫn cài chi tiết](START_HERE.md) · [Báo lỗi / góp ý](https://github.com/phamthanhtung216-sudo/agent-zero/issues)
+[Cài bằng Git](#cài-đặt) · [Tải bộ cài ZIP](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest) · [Hướng dẫn chi tiết](START_HERE.md) · [Báo lỗi / góp ý](https://github.com/phamthanhtung216-sudo/agent-zero/issues)
 
 ## Agent Zero giúp bạn làm gì?
 
@@ -145,15 +145,40 @@ Agent có thể tự xử lý những chi tiết nhỏ, có thể hoàn tác, tr
 
 **Nếu dự án đã có agent hoặc bộ nhớ cũ:** installer chọn luồng **adoption** — tiếp nhận có kiểm soát. Agent Zero được đặt ở dạng bản đề xuất riêng, khảo sát phần cũ và lập kế hoạch chuyển đổi. Việc thay đổi phần đang dùng cần bạn duyệt. Sau khi chuyển đổi và kiểm tra, agent còn phải báo kết quả để bạn chấp nhận rõ ràng.
 
-## Cài đặt cho người mới
+## Cài đặt
 
-Bạn cần Windows 10/11, Windows PowerShell 5.1 hoặc PowerShell 7, và một coding agent có quyền làm việc với file dự án.
+Bạn cần Windows 10/11, Windows PowerShell 5.1 hoặc PowerShell 7, Git nếu chọn cách 1, và một coding agent có quyền làm việc với file dự án.
+
+### Cách 1 — Kéo toàn bộ repo bằng một lệnh Git
+
+Mở PowerShell **ngay tại thư mục gốc của project** rồi chạy:
+
+```powershell
+git clone https://github.com/phamthanhtung216-sudo/agent-zero.git agent-zero-kit
+```
+
+Lệnh này tải toàn bộ bản public vào thư mục `agent-zero-kit`. Lần đầu phải dùng `git clone`; `git pull` chỉ hoạt động sau khi thư mục Git đã tồn tại.
+
+Mở thư mục `agent-zero-kit`, nhấp đúp **`INSTALL.cmd`**, đọc đường dẫn project và xác nhận chế độ installer đề xuất.
+
+Khi muốn kéo bản public mới nhất về **thư mục kit đã clone**, đứng tại thư mục gốc project và chạy:
+
+```powershell
+git -C .\agent-zero-kit pull --ff-only
+```
+
+Trước mắt, lệnh này chỉ cập nhật bộ kit đã tải. Nó chưa tự thay thế các file Agent Zero đã được cài vào project; quy trình nâng cấp bản đã cài sẽ được xử lý ở phiên bản sau.
+
+### Cách 2 — Tải file ZIP
 
 1. Mở [trang Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest), tải file **`agent-zero-kit-v0.8.1.zip`** trong phần **Assets**.
-2. Giải nén. Copy **nguyên thư mục `agent-zero-kit`** vào thư mục gốc của dự án cần làm.
-3. Mở thư mục kit, nhấp đúp **`INSTALL.cmd`**, đọc đường dẫn và xác nhận chế độ được đề xuất.
-4. Khi cài thành công, mở **phiên coding agent mới** tại thư mục dự án.
-5. Gửi câu khởi động:
+2. Giải nén và copy **nguyên thư mục `agent-zero-kit`** vào thư mục gốc của project.
+3. Mở thư mục kit, nhấp đúp **`INSTALL.cmd`**, đọc đường dẫn project và xác nhận chế độ installer đề xuất.
+
+### Sau khi installer hoàn tất
+
+1. Mở **phiên coding agent mới** tại thư mục project.
+2. Gửi câu khởi động:
 
 ```text
 Khởi động Agent Zero theo .agent-zero/START.md
@@ -166,21 +191,13 @@ Sau đó mô tả điều bạn muốn làm, ví dụ:
 Xem [START_HERE.md](START_HERE.md) nếu cần hướng dẫn từng bước hoặc giải thích các lựa chọn của installer.
 
 <details>
-<summary>Đã quen Git hoặc muốn kiểm tra trước khi cài?</summary>
-
-Mở PowerShell **ngay tại thư mục gốc của project**:
-
-```powershell
-git clone https://github.com/phamthanhtung216-sudo/agent-zero.git agent-zero-kit
-```
+<summary>Muốn kiểm tra trước khi cài?</summary>
 
 Kiểm tra mà chưa ghi file vào project:
 
 ```powershell
 & ".\agent-zero-kit\install-agent-zero.ps1" -TargetPath "." -WhatIf
 ```
-
-Sau đó mở `agent-zero-kit` và chạy `INSTALL.cmd`.
 
 </details>
 
@@ -200,7 +217,7 @@ Kit lưu bộ nhớ trong project local. Việc backup hoặc đồng bộ là q
 
 **Muốn cập nhật lên bản Agent Zero mới thì sao?**
 
-Theo dõi [Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases). Bản hiện tại chưa có tự nâng cấp tại chỗ. `git pull` chỉ cập nhật thư mục kit tải về; cần review và bảo toàn bộ nhớ trước khi chuyển đổi bản đã cài.
+Theo dõi [Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases). Nếu đã tải bằng Git, chạy `git -C .\agent-zero-kit pull --ff-only` để kéo bản public mới về thư mục kit. Bản hiện tại chưa tự nâng cấp các file Agent Zero đã cài trong project; quy trình đó sẽ được xử lý sau và cần bảo toàn bộ nhớ dự án.
 
 ## Tài liệu và góp ý
 
