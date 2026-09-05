@@ -1,109 +1,217 @@
 # Agent Zero
 
-Agent Zero là bộ quy tắc và công cụ cài đặt giúp coding agent làm việc có kiểm chứng, giữ context dự án có kiểm soát và không âm thầm thay đổi ý định của người dùng.
+**Giúp AI hiểu dự án, học từ việc đã làm và tiếp tục công việc có căn cứ.**
 
-Đây là bộ instruction/installer dành cho coding agent; cần một coding agent có sẵn để sử dụng.
+Bạn đang dùng AI để làm website, ứng dụng hay công cụ nội bộ? Agent Zero bổ sung **bộ nhớ dự án và một quy trình làm việc** cho trợ lý AI: tìm hiểu trước khi sửa, ghi nhớ quyết định, kiểm tra kết quả và rút kinh nghiệm từ những vấn đề đã được xác minh.
 
-Phiên bản hiện tại: **v0.8.1**
+Mục tiêu là giúp bạn bớt phải giải thích lại từ đầu, dễ biết AI đang làm gì và giữ quyền quyết định khi dự án phát triển.
 
-Nền tảng cài đặt: **Windows (PowerShell)**
+Agent Zero là bộ hướng dẫn, file bộ nhớ và công cụ kiểm tra chạy cùng một **coding agent** — tức trợ lý AI có thể đọc, sửa file và chạy lệnh trong dự án. Bạn vẫn cần một công cụ như Codex hoặc Claude Code để thực hiện công việc.
 
-## Điểm chính
+**Bản hiện tại: v0.8.1 · Bộ cài Windows · Hướng dẫn bằng tiếng Việt**
 
-- Khảo sát repository trước khi hỏi người dùng.
-- Phân biệt fact, quyết định của người dùng, giả định và điều chưa biết.
-- Bảo vệ project đã có agent/context bằng quy trình adoption dạng shadow-first.
-- Giữ project memory có giới hạn, có index và chỉ nạp context phù hợp với task.
-- Review, verify và repair dựa trên evidence; không báo thành công khi chưa kiểm tra.
-- Không tự đổi product goal, scope, architecture lớn hoặc quyền quyết định của người dùng.
-- Hỗ trợ Codex qua `AGENTS.md` và có adapter tối thiểu cho Claude Code.
+[Tải bộ cài ZIP](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest) · [Hướng dẫn cài chi tiết](START_HERE.md) · [Báo lỗi / góp ý](https://github.com/phamthanhtung216-sudo/agent-zero/issues)
 
-## Cài nhanh
+## Agent Zero giúp bạn làm gì?
 
-Mở PowerShell ngay tại thư mục gốc của project cần cài Agent Zero rồi chạy:
+| Bạn cần | Cơ chế của Agent Zero |
+|---|---|
+| Bắt đầu khi mới có một ý tưởng | Đọc dự án hiện có, hỏi những điểm quan trọng rồi cùng bạn làm rõ mục tiêu và bước đầu tiên. |
+| AI nhớ những điều hai bên đã thống nhất | Lưu mục tiêu, quyết định và việc đang làm vào các file trong dự án để phiên sau có thể đọc lại. |
+| AI rút kinh nghiệm từ lỗi cũ | Ghi bài học có bằng chứng và tìm lại bài học liên quan trước công việc tương tự. |
+| Hiểu biết của AI theo kịp dự án | Cập nhật trạng thái và thông tin kỹ thuật khi có bằng chứng mới; chỉ ra mâu thuẫn cần bạn quyết định. |
+| Dự án lớn dần mà context vẫn có tổ chức | Chia bộ nhớ theo tầng, dùng mục lục và chỉ lấy những chi tiết phù hợp với công việc. |
+| Biết một việc đã thực sự xong chưa | Đặt tiêu chí hoàn thành, chạy kiểm tra và báo kết quả, lỗi hoặc phần còn thiếu. |
+| Thêm khả năng mới cho agent | Đề xuất quy trình tái sử dụng thành **skill** — một bộ hướng dẫn chuyên cho một loại việc — rồi đánh giá trước khi xin bạn kích hoạt. |
 
-```powershell
-git clone https://github.com/phamthanhtung216-sudo/agent-zero.git agent-zero-kit
-```
+Các cơ chế này kết hợp hướng dẫn cho AI với script kiểm tra. Khả năng thực hiện còn phụ thuộc vào coding agent, mô hình và quyền công cụ bạn đang dùng.
 
-Sau đó mở thư mục `agent-zero-kit` và nhấp đúp:
+## 1. Tự học: biến kinh nghiệm đã kiểm chứng thành bộ nhớ
 
-```text
-INSTALL.cmd
-```
+Hãy hình dung Agent Zero có một **sổ tay kinh nghiệm riêng cho dự án**.
 
-Installer sẽ:
+Sau một công việc, agent xem có điều gì đáng giữ lại để lần sau làm tốt hơn: một nguyên nhân lỗi đã tìm được, một điều kiện dễ bỏ sót, hoặc một cách kiểm tra phù hợp. Bài học cần ghi rõ **áp dụng khi nào, vì sao và bằng chứng ở đâu**.
 
-1. Xác định thư mục project ở ngay bên ngoài `agent-zero-kit`.
-2. Kiểm tra project mới hay đã có agent/context.
-3. Đề xuất chế độ `NEW_PROJECT` hoặc `ADOPTION` và chờ bạn xác nhận.
-4. Cài đặt, validate và rollback phần vừa tạo nếu có lỗi.
-5. Hiển thị câu lệnh ngắn để khởi động Agent Zero trong một phiên AI mới.
+Một bài học đi qua các mức:
 
-Bạn nên đọc [START_HERE.md](START_HERE.md) trước lần cài đầu tiên. Có thể kiểm tra mà chưa ghi file bằng lệnh:
+1. **Mới quan sát:** có dấu hiệu đáng chú ý, nhưng còn cần xác minh.
+2. **Đã kiểm chứng:** nguyên nhân được xác nhận bằng tái hiện lỗi, kiểm tra hoặc bằng chứng phù hợp.
+3. **Được đưa vào quy trình:** với bài học cần trở thành quy tắc bắt buộc, agent xin bạn đồng ý; có thể bổ sung bài kiểm tra hoặc cơ chế chặn lỗi.
+4. **Không còn phù hợp:** khi dự án thay đổi, giữ lại lịch sử và ngừng áp dụng bài học cũ.
 
-```powershell
-& ".\agent-zero-kit\install-agent-zero.ps1" -TargetPath "." -WhatIf
-```
+Một ghi chú mới chưa được coi là sự thật. Trong công việc thông thường, agent tra những bài học đã đủ điều kiện và có liên quan đến task hiện tại.
 
-## Hai chế độ an toàn
+**Ví dụ minh họa:** bạn làm website đặt lịch. Agent phát hiện lịch bị lệch ngày, tái hiện lỗi và xác nhận nguyên nhân nằm ở cách xử lý múi giờ. Nó có thể lưu bài học cho phần ngày/giờ. Khi làm chức năng nhắc lịch sau đó, bài học này có thể được chọn lại để nhắc kiểm tra đúng chỗ.
 
-### Project mới
+**“Tự học” ở đây là tích lũy kiến thức trong các file dự án.** Nó không huấn luyện lại hay thay đổi trọng số của mô hình AI.
 
-Agent Zero cài `AGENTS.md`, adapter `CLAUDE.md`, project memory và các validator cần thiết. Sau đó agent khảo sát project và hướng dẫn bạn hoàn thiện mục tiêu, phạm vi cùng tiêu chí thành công.
+## 2. Tự cập nhật: giữ hiểu biết của agent theo kịp dự án
 
-### Project đã có agent hoặc context
+Dự án thay đổi mỗi ngày. Agent Zero có quy trình cập nhật những điều nó biết, gồm:
 
-Agent Zero không ghi đè context hiện hữu. Nó cài một candidate riêng, lập inventory và migration plan, rồi chờ bạn phê duyệt trước khi cutover. Technical checks không tự thay thế sự chấp nhận của người dùng.
+- Công việc đã xong, việc còn dở và bước tiếp theo.
+- Lệnh kiểm tra thực sự chạy được và kết quả đã quan sát.
+- Thông tin kỹ thuật đã được xác minh từ code, cấu hình hoặc quá trình chạy.
+- Bài học và quyết định nào còn phù hợp, thông tin nào đã cũ hoặc mâu thuẫn.
 
-## Nội dung repository này
+Agent phân biệt **điều đã xác minh**, **quyết định của bạn**, **giả định** và **điều chưa biết**. Khi phát hiện thông tin cũ không còn đúng, nó phải đối chiếu lại trước khi cập nhật.
 
-Đây là **bản phân phối công khai**, không phải source/lab phát triển. Repository chỉ chứa kit đã build và tài liệu cần để cài đặt:
+Ví dụ: tài liệu ghi một lệnh chạy test, nhưng lệnh đó không còn khớp cấu hình hiện tại. Agent kiểm tra lại, xác nhận lệnh phù hợp và cập nhật hướng dẫn để phiên sau có cơ sở dùng đúng.
 
-```text
-agent-zero/
-├── README.md
-├── START_HERE.md
-├── INSTALL.cmd
-├── install-agent-zero.ps1
-├── AGENT_ZERO_CANDIDATE.md
-└── payload/
-```
+**Có ba loại “update” cần phân biệt:**
 
-Project memory nội bộ, test history, công cụ phát triển và cấu hình máy cá nhân không được đưa vào repository này.
+| Loại cập nhật | Agent Zero xử lý thế nào? |
+|---|---|
+| Bộ nhớ và trạng thái dự án | Có thể tự cập nhật trong phạm vi được giao, dựa trên bằng chứng và qua kiểm tra bộ nhớ. |
+| Quy trình, skill hoặc quy tắc bắt buộc | Có thể đề xuất, soạn bản nháp và đánh giá; cần bạn phê duyệt trước khi kích hoạt hoặc áp dụng bắt buộc. |
+| Bộ quy tắc lõi hoặc phiên bản Agent Zero mới | Cần quy trình cập nhật được duyệt, có bản sao để khôi phục và kiểm tra tương ứng. Bản hiện tại chưa có tự nâng cấp tại chỗ. |
 
-## Cập nhật
+Việc cập nhật diễn ra khi agent đang thực hiện công việc. Bộ kit không có dịch vụ tự chạy nền khi bạn đã đóng công cụ AI.
 
-Repository public chỉ được cập nhật khi có bản phát hành đã review. Mỗi phiên bản ổn định có Git tag tương ứng, ví dụ `v0.8.1`. [Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases) cung cấp ZIP chứa nguyên thư mục `agent-zero-kit`; có thể tải ZIP mà không cài Git.
+## 3. Context theo tầng: bàn làm việc và tủ hồ sơ
 
-Khi Agent Zero đã được cài trong project, `git pull` vào thư mục kit chỉ cập nhật bản tải về. Phiên bản hiện tại chưa có quy trình nâng cấp tại chỗ tự động; cần review các file đã cài và bảo toàn project memory trước khi migration. Không chạy lại installer để ghi đè một bản đã cài.
+**Context** là những thông tin AI đang được cung cấp để hiểu và làm việc. Trong một phiên làm việc, lượng thông tin đó có giới hạn.
 
-## Khởi động và giới hạn
+Bạn có thể hình dung bộ nhớ của Agent Zero như **bàn làm việc có tài liệu cần dùng ngay, bên cạnh là tủ hồ sơ để tra cứu**:
 
-Sau khi cài, mở phiên coding agent mới tại project và gửi:
+| Tầng | Ví như | Chứa gì? | Khi nào dùng? |
+|---|---|---|---|
+| **1. Quy tắc lõi** | Nội quy làm việc | Quyền hạn, cách kiểm tra, cách học, cách xin quyết định và bảo vệ dữ liệu. | Là phần nền tảng phải được đọc khi làm việc. |
+| **2. Dự án hiện tại** | Hồ sơ đang mở trên bàn | Mục tiêu, phạm vi, ràng buộc, việc đang làm và cách tìm bộ nhớ liên quan. | Đọc khi bắt đầu hoặc tiếp tục task. |
+| **3. Kiến thức liên quan** | Ngăn hồ sơ có mục lục | Nội dung chi tiết của các bài học và quyết định đã lưu. | Chọn theo loại việc, phần dự án, công cụ hoặc dấu hiệu lỗi. |
+| **4. Lịch sử lưu trữ** | Kho hồ sơ cũ | Bản ghi đã chuyển sang lưu trữ và lịch sử thay đổi. | Tra khi cần hiểu quá khứ, xử lý mâu thuẫn hoặc khôi phục. |
+
+Hai tầng đầu là phần thông tin thường trực, còn gọi là **hot context**. Phần chi tiết được tra có chọn lọc; lịch sử lưu trữ là **cold context**, không được nạp mặc định.
+
+**Ví dụ:** khi sửa màn hình đặt lịch, agent tìm quyết định về luồng đặt lịch và bài học về ngày/giờ. Những hồ sơ về một phần khác của dự án chỉ được lấy khi có liên quan.
+
+Cơ chế chọn còn có điều kiện loại trừ và giới hạn dung lượng. Khi cần tìm lại do lỗi bất ngờ hoặc mâu thuẫn, agent phải nêu lý do mở rộng tra cứu.
+
+Điểm quan trọng: **kiến thức dự án được phép tăng lên, nhưng lượng đem vào mỗi task được giới hạn**. Bộ quy tắc lõi được giữ ổn định; bài học mới đi vào kho bộ nhớ riêng.
+
+<details>
+<summary>Muốn biết các tầng nằm ở file nào?</summary>
+
+Đây là cấu trúc trong project **sau khi cài**, không phải cấu trúc thư mục tải về:
+
+| Nhóm thông tin | Vị trí |
+|---|---|
+| Quy tắc lõi | `AGENTS.md` |
+| Mục tiêu và thông tin hiện hành | `.agent/PROJECT.md` |
+| Task và điểm tiếp tục | `.agent/STATE.md` |
+| Quy tắc tra cứu, giới hạn dung lượng | `.agent/CONTEXT_INDEX.md` |
+| Mục lục bài học và quyết định | `.agent/LESSONS.md`, `.agent/DECISIONS.md` |
+| Nội dung chi tiết | `.agent/lessons/`, `.agent/decisions/` |
+| Lịch sử lưu trữ | `.agent/archive/` |
+
+Mặc định của kit: phần thường trực tối đa **64 KiB**, phần chi tiết được chọn tối đa **16 KiB** và **8 bản ghi** cho mỗi lần chọn context. Đây là giới hạn cho bộ nhớ do Agent Zero quản lý, không phải giới hạn toàn bộ cửa sổ chat của mô hình.
+
+Các bản ghi chi tiết có mã kiểm tra SHA-256 để phát hiện nội dung bị thay đổi. Mã này kiểm tra tính toàn vẹn; bằng chứng và xác nhận của đúng người vẫn quyết định nội dung có đáng tin hay không.
+
+Bạn có thể đọc [bộ quy tắc lõi](AGENT_ZERO_CANDIDATE.md) và [mẫu quản lý context](payload/templates/CONTEXT_INDEX.md) ngay trong repo này.
+
+</details>
+
+## 4. Một yêu cầu được xử lý như thế nào?
+
+Giả sử bạn nói:
+
+> “Tôi muốn thêm tính năng nhắc khách trước buổi hẹn.”
+
+Đây là ví dụ minh họa cách Agent Zero được thiết kế để làm việc:
+
+1. **Hiểu yêu cầu trong dự án.** Đọc mục tiêu, phần đang làm và tài liệu liên quan. Kiểm tra dự án trước khi hỏi những gì có thể tự tìm.
+2. **Làm rõ điều ảnh hưởng đến kết quả.** Nếu cần chọn kênh nhắc lịch hoặc dùng dịch vụ có phí, agent trình bày lựa chọn để bạn quyết định.
+3. **Thống nhất thế nào là xong.** Chẳng hạn nhắc đúng thời điểm, không gửi trùng và có cách kiểm tra kết quả.
+4. **Làm theo bước nhỏ.** Ghi điểm tiếp tục cho việc nhiều bước để phiên sau biết đang ở đâu.
+5. **Kiểm tra, tự review và sửa lỗi có bằng chứng.** Nếu cùng một lỗi vẫn còn sau hai chu kỳ sửa, agent phải dừng, báo nguyên nhân đã biết và phương án tiếp theo.
+6. **Báo kết quả và lưu điều đáng nhớ.** Nêu đã làm gì, kiểm tra ra sao, còn thiếu gì; cập nhật trạng thái và bài học có giá trị.
+
+Bạn không cần tự quản lý từng file bộ nhớ. Vai trò chính của bạn là mô tả điều muốn đạt được, phản hồi và đưa ra những quyết định quan trọng.
+
+## 5. Chủ động cải tiến, với quyền quyết định thuộc về bạn
+
+Agent Zero có thể nhận ra cơ hội cải tiến trong lúc làm việc. Đề xuất cần có lý do, liên hệ với mục tiêu dự án, lợi ích và chi phí hoặc rủi ro dự kiến.
+
+Một quy trình nhiều bước lặp lại có thể được đề xuất thành **skill**. Skill được soạn ở nơi dành cho bản nháp, kiểm tra lúc nào nên dùng và lúc nào không nên dùng, rồi mới xin bạn kích hoạt.
+
+Nếu công cụ AI đang dùng hỗ trợ agent phụ, Agent Zero cũng có thể chia các việc độc lập cho chúng. Agent chính vẫn phải đọc kết quả, tích hợp và kiểm tra; số lượng và khả năng chạy song song phụ thuộc công cụ đó.
+
+Agent có thể tự xử lý những chi tiết nhỏ, có thể hoàn tác, trong phạm vi đã được giao. Những thay đổi như mục tiêu sản phẩm, phạm vi lớn, kiến trúc nền tảng, dịch vụ trả phí hoặc đưa thay đổi lên hệ thống thật cần đúng quyền phê duyệt.
+
+## Bắt đầu với dự án mới hoặc dự án đang làm
+
+**Nếu bạn mới có ý tưởng:** agent bắt đầu bằng tìm hiểu dự án, người dùng và điều bạn muốn đạt được. Nó giúp hoàn thiện dần mục tiêu và phạm vi, hỏi tối đa ba câu quan trọng mỗi lượt. Nếu đã có một task cụ thể, agent vẫn có thể làm phần an toàn trong khi làm rõ các điểm còn thiếu.
+
+**Nếu dự án đã có agent hoặc bộ nhớ cũ:** installer chọn luồng **adoption** — tiếp nhận có kiểm soát. Agent Zero được đặt ở dạng bản đề xuất riêng, khảo sát phần cũ và lập kế hoạch chuyển đổi. Việc thay đổi phần đang dùng cần bạn duyệt. Sau khi chuyển đổi và kiểm tra, agent còn phải báo kết quả để bạn chấp nhận rõ ràng.
+
+## Cài đặt cho người mới
+
+Bạn cần Windows 10/11, Windows PowerShell 5.1 hoặc PowerShell 7, và một coding agent có quyền làm việc với file dự án.
+
+1. Mở [trang Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest), tải file **`agent-zero-kit-v0.8.1.zip`** trong phần **Assets**.
+2. Giải nén. Copy **nguyên thư mục `agent-zero-kit`** vào thư mục gốc của dự án cần làm.
+3. Mở thư mục kit, nhấp đúp **`INSTALL.cmd`**, đọc đường dẫn và xác nhận chế độ được đề xuất.
+4. Khi cài thành công, mở **phiên coding agent mới** tại thư mục dự án.
+5. Gửi câu khởi động:
 
 ```text
 Khởi động Agent Zero theo .agent-zero/START.md
 ```
 
-“Học” nghĩa là cập nhật context có kiểm chứng trong repository; không thay đổi trọng số mô hình. Bộ instruction định hướng hành vi nhưng không thay thế sandbox hoặc quyền của công cụ. Các kiểm tra tự động xác nhận cấu trúc và các nhánh installer; một số kịch bản hành vi tự nhiên còn cần đánh giá thêm.
+Sau đó mô tả điều bạn muốn làm, ví dụ:
 
-## Yêu cầu
+> “Tôi muốn làm website đặt lịch cho một studio nhỏ. Hãy kiểm tra dự án và giúp tôi xác định bước đầu tiên.”
 
-- Windows 10/11.
-- Windows PowerShell 5.1 hoặc PowerShell 7.
-- Một coding agent có khả năng đọc instruction trong repository.
+Xem [START_HERE.md](START_HERE.md) nếu cần hướng dẫn từng bước hoặc giải thích các lựa chọn của installer.
 
-## An toàn
+<details>
+<summary>Đã quen Git hoặc muốn kiểm tra trước khi cài?</summary>
 
-- Không lưu API key, token, credential hoặc dữ liệu cá nhân trong project memory.
-- Không tự deploy production hoặc thay đổi external system khi chưa được cho phép.
-- Không ghi đè instruction cũ trong chế độ adoption.
-- Luôn review nội dung script trước khi chạy code tải từ Internet.
+Mở PowerShell **ngay tại thư mục gốc của project**:
 
-## Phản hồi
+```powershell
+git clone https://github.com/phamthanhtung216-sudo/agent-zero.git agent-zero-kit
+```
 
-Nếu gặp lỗi, hãy tạo GitHub Issue kèm phiên bản Agent Zero, phiên bản PowerShell, bước tái hiện và thông báo lỗi đã được loại bỏ dữ liệu nhạy cảm.
+Kiểm tra mà chưa ghi file vào project:
+
+```powershell
+& ".\agent-zero-kit\install-agent-zero.ps1" -TargetPath "." -WhatIf
+```
+
+Sau đó mở `agent-zero-kit` và chạy `INSTALL.cmd`.
+
+</details>
+
+## Một vài điều cần biết
+
+**Mở phiên chat mới, agent có nhớ hết không?**
+
+Agent có thể đọc lại những gì đã được lưu trong file dự án. Cuộc hội thoại chưa được lưu, file bị mất hoặc dữ liệu nằm ngoài dự án không tự trở thành bộ nhớ. Để tiếp tục, mở agent tại đúng project và dùng câu khởi động ở trên.
+
+**Cài Agent Zero có bảo đảm AI luôn làm đúng không?**
+
+Bộ hướng dẫn giúp tổ chức cách làm việc; script kiểm tra xác nhận các điều kiện mà chúng được viết để kiểm tra. Kết quả vẫn phụ thuộc mô hình, công cụ và bằng chứng thực tế. Tự review cũng không thay thế một người hoặc bên khác review độc lập.
+
+**Bộ nhớ có tự đồng bộ lên GitHub không?**
+
+Kit lưu bộ nhớ trong project local. Việc backup hoặc đồng bộ là quy trình riêng. Không lưu mật khẩu, API key, token hay dữ liệu nhạy cảm trong bộ nhớ; xem lại các file trước khi chia sẻ dự án. Dữ liệu cung cấp cho coding agent còn phụ thuộc thiết lập và dịch vụ AI bạn dùng.
+
+**Muốn cập nhật lên bản Agent Zero mới thì sao?**
+
+Theo dõi [Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases). Bản hiện tại chưa có tự nâng cấp tại chỗ. `git pull` chỉ cập nhật thư mục kit tải về; cần review và bảo toàn bộ nhớ trước khi chuyển đổi bản đã cài.
+
+## Tài liệu và góp ý
+
+Repo này chứa kit phát hành và tài liệu công khai. Bộ nhớ của dự án bạn sẽ được tạo trong chính project sau khi cài.
+
+- [Hướng dẫn cài đặt và khởi động](START_HERE.md)
+- [Bộ quy tắc hoạt động đầy đủ](AGENT_ZERO_CANDIDATE.md)
+- [Các kịch bản đánh giá](payload/TESTING.md)
+- [Báo lỗi hoặc đề xuất cải tiến](https://github.com/phamthanhtung216-sudo/agent-zero/issues)
+
+Khi báo lỗi, gửi phiên bản Agent Zero, phiên bản PowerShell, bước tái hiện và thông báo lỗi đã loại bỏ dữ liệu nhạy cảm. Một số kịch bản hành vi tự nhiên vẫn cần đánh giá thêm; tài liệu quy trình không đồng nghĩa tất cả hành vi đã được chứng minh trên mọi mô hình.
 
 ## License
 
