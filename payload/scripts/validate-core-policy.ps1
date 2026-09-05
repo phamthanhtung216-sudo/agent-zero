@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$CorePath,
     [string]$ReferenceRoot,
-    [string]$ExpectedVersion = "0.8.1",
+    [string]$ExpectedVersion = "0.10.0",
     [int]$WarningBytes = 26624,
     [int]$HardBytes = 28672,
     [switch]$Quiet
@@ -38,6 +38,7 @@ $requiredMarkers = @(
     '## BOOTSTRAP',
     '## Adaptive goal governance',
     '## ACTIVE',
+    '## Meta-review',
     '## RECALIBRATION',
     '## Project memory',
     '## Learning loop',
@@ -63,6 +64,22 @@ $requiredMarkers = @(
     'LEARN',
     'SYNC',
     'REPORT',
+    'governance fitness',
+    'SELF_IMPROVEMENT_PROPOSAL',
+    'PROJECT_SPECIFIC|FRAMEWORK_CORE',
+    'SAFETY_INVARIANT|USER_BOUNDARY|PROCEDURAL_DEFAULT|CAPABILITY_ASSUMPTION',
+    'FRICTION -> DIAGNOSED -> PROPOSED -> ACCEPTED|REJECTED -> IMPLEMENTED -> BEHAVIORALLY_VERIFIED',
+    'IncludeProposed',
+    'HARD_INVARIANT|REQUIRED_OUTCOME|PROCEDURAL_DEFAULT|CAPABILITY_ASSUMPTION',
+    'TRIVIAL|STANDARD|HIGH_RISK|GOVERNANCE',
+    'UNDERSTAND -> DIRECT_REPORT -> COMPLETE',
+    'VERIFY_FAIL -> REPAIR -> VERIFY',
+    'COMPLETE|BLOCKED|AWAITING_USER_DECISION',
+    'new user input or external evidence',
+    'repair<=2|review<=2|meta-review<=1|proposal<=1|memory-transaction<=1',
+    'NO_DURABLE_LEARNING',
+    'NO_MEMORY_DELTA',
+    'internal phase',
     'fingerprint',
     'stage -> validate -> apply',
     'CANDIDATE -> VERIFIED -> ENFORCED -> RETIRED',
@@ -90,13 +107,16 @@ foreach ($marker in $requiredMarkers) {
 }
 
 $forbiddenPatterns = @(
-    @{ Pattern = '(?i)project lesson.{0,100}(append|promote).{0,100}AGENTS\.md'; Reason = "project learning must not grow the core" },
-    @{ Pattern = '(?i)lesson.{0,100}(automatic|auto).{0,100}(update|append|promote).{0,100}AGENTS\.md'; Reason = "automatic lesson promotion to core is forbidden" }
+    @{ Pattern = '(?i)project lesson.{0,100}(append|promote).{0,100}AGENTS\.md'; Code = "AZ-CORE-LEARNING-BOUNDARY"; Reason = "project learning must not grow the core" },
+    @{ Pattern = '(?i)lesson.{0,100}(automatic|auto).{0,100}(update|append|promote).{0,100}AGENTS\.md'; Code = "AZ-CORE-LEARNING-BOUNDARY"; Reason = "automatic lesson promotion to core is forbidden" },
+    @{ Pattern = '(?i)(may|is allowed to).{0,80}automatically.{0,40}(update|mutate).{0,30}(AGENTS\.md|core)'; Code = "AZ-CORE-SELF-UPDATE-BOUNDARY"; Reason = "a self-improvement proposal must not authorize its own core mutation" },
+    @{ Pattern = '(?i)META_REVIEW.{0,60}(may|can).{0,60}(call|invoke).{0,60}META_REVIEW'; Code = "AZ-CORE-LOOP-RECURSION"; Reason = "meta-review must not recursively invoke itself" },
+    @{ Pattern = '(?i)PROCEDURAL_DEFAULT.{0,60}(may|can).{0,60}(override|weaken).{0,60}HARD_INVARIANT'; Code = "AZ-CORE-HARD-INVARIANT"; Reason = "a procedural default must not override a hard invariant" }
 )
 
 foreach ($item in $forbiddenPatterns) {
     if ([regex]::IsMatch($coreText, $item.Pattern)) {
-        Add-CoreError "AZ-CORE-LEARNING-BOUNDARY" $item.Reason
+        Add-CoreError $item.Code $item.Reason
     }
 }
 

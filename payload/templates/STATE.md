@@ -1,6 +1,6 @@
 # Current State
 
-- Schema: `4`
+- Schema: `5`
 - Project phase: `BOOTSTRAP`
 - Run ID: `UNASSIGNED`
 - Current objective: `UNKNOWN`
@@ -22,9 +22,18 @@
 
 ## Execution checkpoint
 
+- Execution profile: `STANDARD`
 - Loop phase: `UNDERSTAND`
 - Repair attempt: `0`
 - Repair limit: `2`
+- Review pass: `0`
+- Review limit: `2`
+- Meta-review count: `0`
+- Meta-review limit: `1`
+- Proposal count: `0`
+- Proposal limit: `1`
+- Memory transaction count: `0`
+- Memory transaction limit: `1`
 - Blocker fingerprint: `NONE`
 - Changed paths: `NONE`
 

@@ -116,7 +116,7 @@ if (Test-Path -LiteralPath $corePath -PathType Leaf) {
     }
 
     $coreText = Get-Content -Raw -LiteralPath $corePath
-    foreach ($section in @("# Agent Zero v0.8.1", "## Stable core contract và project context", "## ADOPTION", "## Adaptive goal governance", "## Learning loop và bộ nhớ học tập riêng")) {
+    foreach ($section in @("# Agent Zero v0.10.0", "## Stable core contract và project context", "## ADOPTION", "## Adaptive goal governance", "## Meta-review và cải tiến", "## Learning loop và bộ nhớ học tập riêng")) {
         if (-not $coreText.Contains($section)) {
             $errors.Add("Agent Zero core is missing section: $section")
         }
@@ -134,6 +134,16 @@ if (Test-Path -LiteralPath $corePath -PathType Leaf) {
     foreach ($marker in @("CONTEXT_INDEX.md", "select-context.ps1", "Hot control plane", "fingerprint", "quota")) {
         if (-not $coreText.Contains($marker)) {
             $errors.Add("AZ-CORE-POLICY-CONTEXT: Agent Zero core is missing bounded-context marker: $marker")
+        }
+    }
+    foreach ($marker in @("governance fitness", "SELF_IMPROVEMENT_PROPOSAL", "PROJECT_SPECIFIC|FRAMEWORK_CORE", "SAFETY_INVARIANT|USER_BOUNDARY|PROCEDURAL_DEFAULT|CAPABILITY_ASSUMPTION", "FRICTION -> DIAGNOSED -> PROPOSED -> ACCEPTED|REJECTED -> IMPLEMENTED -> BEHAVIORALLY_VERIFIED", "IncludeProposed")) {
+        if (-not $coreText.Contains($marker)) {
+            $errors.Add("AZ-CORE-POLICY-META-REVIEW: Agent Zero core is missing self-improvement invariant marker: $marker")
+        }
+    }
+    foreach ($marker in @("HARD_INVARIANT|REQUIRED_OUTCOME|PROCEDURAL_DEFAULT|CAPABILITY_ASSUMPTION", "TRIVIAL|STANDARD|HIGH_RISK|GOVERNANCE", "UNDERSTAND -> DIRECT_REPORT -> COMPLETE", "VERIFY_FAIL -> REPAIR -> VERIFY", "COMPLETE|BLOCKED|AWAITING_USER_DECISION", "repair<=2|review<=2|meta-review<=1|proposal<=1|memory-transaction<=1", "NO_DURABLE_LEARNING", "NO_MEMORY_DELTA", "internal phase")) {
+        if (-not $coreText.Contains($marker)) {
+            $errors.Add("AZ-CORE-POLICY-BOUNDED-EXECUTION: Agent Zero core is missing bounded-execution marker: $marker")
         }
     }
     $subAgentSectionMatches = [regex]::Matches($coreText, '(?ms)^##[ \t]+[^\r\n]*sub-agent[^\r\n]*\r?\n(?<body>.*?)(?=^##[ \t]|\z)')
@@ -155,7 +165,7 @@ $installedReferenceRoot = Join-Path $agentZeroRoot "references"
 if ((Test-Path -LiteralPath $corePolicyValidatorPath -PathType Leaf) -and
     (Test-Path -LiteralPath $corePath -PathType Leaf) -and
     (Test-Path -LiteralPath $installedReferenceRoot -PathType Container)) {
-    & $corePolicyValidatorPath -CorePath $corePath -ReferenceRoot $installedReferenceRoot -ExpectedVersion "0.8.1" | Out-Null
+    & $corePolicyValidatorPath -CorePath $corePath -ReferenceRoot $installedReferenceRoot -ExpectedVersion "0.10.0" | Out-Null
 }
 
 if ($Mode -eq "NewProject") {
@@ -175,6 +185,16 @@ if ($Mode -eq "NewProject") {
         }
         if (-not $projectMemory.Contains('- Schema: `4`') -or -not $projectMemory.Contains('## Goal governance') -or -not $projectMemory.Contains('## Context architecture')) {
             $errors.Add("New-project memory must use schema 4 bounded context governance.")
+        }
+    }
+
+    $stateMemoryPath = Join-Path $projectRoot ".agent/STATE.md"
+    if (Test-Path -LiteralPath $stateMemoryPath -PathType Leaf) {
+        $stateMemory = Get-Content -Raw -LiteralPath $stateMemoryPath
+        foreach ($marker in @('- Schema: `5`', '- Execution profile:', '- Review limit: `2`', '- Meta-review limit: `1`', '- Proposal limit: `1`', '- Memory transaction limit: `1`')) {
+            if (-not $stateMemory.Contains($marker)) {
+                $errors.Add("New-project state is missing bounded-loop marker: $marker")
+            }
         }
     }
 

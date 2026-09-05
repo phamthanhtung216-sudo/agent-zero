@@ -8,7 +8,7 @@ Mục tiêu là giúp bạn bớt phải giải thích lại từ đầu, dễ b
 
 Agent Zero là bộ hướng dẫn, file bộ nhớ và công cụ kiểm tra chạy cùng một **coding agent** — tức trợ lý AI có thể đọc, sửa file và chạy lệnh trong dự án. Bạn vẫn cần một công cụ như Codex hoặc Claude Code để thực hiện công việc.
 
-**Bản hiện tại: v0.8.1 · Bộ cài Windows · Hướng dẫn bằng tiếng Việt**
+**Bản hiện tại: v0.10.0 · Bộ cài Windows · Hướng dẫn bằng tiếng Việt**
 
 [Cài bằng Git](#cài-đặt) · [Tải bộ cài ZIP](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest) · [Hướng dẫn chi tiết](START_HERE.md) · [Báo lỗi / góp ý](https://github.com/phamthanhtung216-sudo/agent-zero/issues)
 
@@ -19,6 +19,8 @@ Agent Zero là bộ hướng dẫn, file bộ nhớ và công cụ kiểm tra ch
 | Bắt đầu khi mới có một ý tưởng | Đọc dự án hiện có, hỏi những điểm quan trọng rồi cùng bạn làm rõ mục tiêu và bước đầu tiên. |
 | AI nhớ những điều hai bên đã thống nhất | Lưu mục tiêu, quyết định và việc đang làm vào các file trong dự án để phiên sau có thể đọc lại. |
 | AI rút kinh nghiệm từ lỗi cũ | Ghi bài học có bằng chứng và tìm lại bài học liên quan trước công việc tương tự. |
+| AI nhận ra chính quy trình của nó đang cản việc | Review rule của Agent Zero, chủ động đưa proposal có bằng chứng và chờ bạn duyệt trước khi đổi core. |
+| AI không biến mọi câu hỏi thành quy trình dài | Chọn profile theo độ phức tạp, giới hạn số vòng review/repair và dừng ở terminal state rõ ràng. |
 | Hiểu biết của AI theo kịp dự án | Cập nhật trạng thái và thông tin kỹ thuật khi có bằng chứng mới; chỉ ra mâu thuẫn cần bạn quyết định. |
 | Dự án lớn dần mà context vẫn có tổ chức | Chia bộ nhớ theo tầng, dùng mục lục và chỉ lấy những chi tiết phù hợp với công việc. |
 | Biết một việc đã thực sự xong chưa | Đặt tiêu chí hoàn thành, chạy kiểm tra và báo kết quả, lỗi hoặc phần còn thiếu. |
@@ -64,7 +66,7 @@ Ví dụ: tài liệu ghi một lệnh chạy test, nhưng lệnh đó không c�
 |---|---|
 | Bộ nhớ và trạng thái dự án | Có thể tự cập nhật trong phạm vi được giao, dựa trên bằng chứng và qua kiểm tra bộ nhớ. |
 | Quy trình, skill hoặc quy tắc bắt buộc | Có thể đề xuất, soạn bản nháp và đánh giá; cần bạn phê duyệt trước khi kích hoạt hoặc áp dụng bắt buộc. |
-| Bộ quy tắc lõi hoặc phiên bản Agent Zero mới | Cần quy trình cập nhật được duyệt, có bản sao để khôi phục và kiểm tra tương ứng. Bản hiện tại chưa có tự nâng cấp tại chỗ. |
+| Bộ quy tắc lõi hoặc phiên bản Agent Zero mới | Agent phải chủ động đề xuất khi chính rule gây cản trở; việc sửa core vẫn cần bạn duyệt, có bản sao để khôi phục và kiểm tra tương ứng. Bản hiện tại chưa có tự nâng cấp tại chỗ. |
 
 Việc cập nhật diễn ra khi agent đang thực hiện công việc. Bộ kit không có dịch vụ tự chạy nền khi bạn đã đóng công cụ AI.
 
@@ -124,14 +126,14 @@ Giả sử bạn nói:
 2. **Làm rõ điều ảnh hưởng đến kết quả.** Nếu cần chọn kênh nhắc lịch hoặc dùng dịch vụ có phí, agent trình bày lựa chọn để bạn quyết định.
 3. **Thống nhất thế nào là xong.** Chẳng hạn nhắc đúng thời điểm, không gửi trùng và có cách kiểm tra kết quả.
 4. **Làm theo bước nhỏ.** Ghi điểm tiếp tục cho việc nhiều bước để phiên sau biết đang ở đâu.
-5. **Kiểm tra, tự review và sửa lỗi có bằng chứng.** Nếu cùng một lỗi vẫn còn sau hai chu kỳ sửa, agent phải dừng, báo nguyên nhân đã biết và phương án tiếp theo.
+5. **Kiểm tra, tự review và sửa lỗi có bằng chứng.** Agent review cả kết quả lẫn việc quy trình Agent Zero có gây cản trở hay không. Nếu cùng một lỗi vẫn còn sau hai chu kỳ sửa, agent phải dừng và báo phương án tiếp theo.
 6. **Báo kết quả và lưu điều đáng nhớ.** Nêu đã làm gì, kiểm tra ra sao, còn thiếu gì; cập nhật trạng thái và bài học có giá trị.
 
 Bạn không cần tự quản lý từng file bộ nhớ. Vai trò chính của bạn là mô tả điều muốn đạt được, phản hồi và đưa ra những quyết định quan trọng.
 
 ## 5. Chủ động cải tiến, với quyền quyết định thuộc về bạn
 
-Agent Zero có thể nhận ra cơ hội cải tiến trong lúc làm việc. Đề xuất cần có lý do, liên hệ với mục tiêu dự án, lợi ích và chi phí hoặc rủi ro dự kiến.
+Agent Zero phải tự review governance khi rule gây blocking/repair lặp, user phải sửa hành vi, overhead không tăng chất lượng, behavioral regression hoặc giả định về năng lực model/runtime đã cũ. Khi có bằng chứng đáng kể, agent chủ động tạo proposal — không chờ bạn hỏi. Đề xuất nêu rule bị ảnh hưởng, evidence, tác động, thay đổi nhỏ nhất, rủi ro, cách kiểm tra và rollback. Proposal không phải approval và không cho agent tự ý sửa core.
 
 Một quy trình nhiều bước lặp lại có thể được đề xuất thành **skill**. Skill được soạn ở nơi dành cho bản nháp, kiểm tra lúc nào nên dùng và lúc nào không nên dùng, rồi mới xin bạn kích hoạt.
 
@@ -171,7 +173,7 @@ Trước mắt, lệnh này chỉ cập nhật bộ kit đã tải. Nó chưa t�
 
 ### Cách 2 — Tải file ZIP
 
-1. Mở [trang Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest), tải file **`agent-zero-kit-v0.8.1.zip`** trong phần **Assets**.
+1. Mở [trang Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest), tải file **`agent-zero-kit-v0.10.0.zip`** trong phần **Assets**.
 2. Giải nén và copy **nguyên thư mục `agent-zero-kit`** vào thư mục gốc của project.
 3. Mở thư mục kit, nhấp đúp **`INSTALL.cmd`**, đọc đường dẫn project và xác nhận chế độ installer đề xuất.
 

@@ -1,4 +1,4 @@
-# Agent Zero v0.8.1
+# Agent Zero v0.10.0
 
 ## Chỉ thị gốc
 
@@ -141,23 +141,32 @@ Mỗi task có ý nghĩa ghi `Goal link`, `Alignment status`, `Contribution`, `S
 
 Khi hướng chưa rõ, đề xuất tối đa ba hypothesis hoặc thí nghiệm nhỏ với evidence và stop/review condition; chỉ rebaseline khi kết quả thay đổi quyết định tiếp theo.
 
-## ACTIVE — vòng lặp thực thi
+## ACTIVE — hữu hạn
 
-Với task có ý nghĩa, thực hiện:
+Rule thuộc `HARD_INVARIANT|REQUIRED_OUTCOME|PROCEDURAL_DEFAULT|CAPABILITY_ASSUMPTION`. Authority, secret, destructive/external boundary, scope và truthful verification là hard. Default chỉ đổi bằng cách evidence-equivalent, không kém an toàn; review assumption khi runtime đổi.
 
-1. `UNDERSTAND`: đọc yêu cầu, goal, core và hot project context; chọn lesson/decision liên quan thay vì nạp toàn bộ memory.
-2. `DEFINE_DONE`: xác định contribution và acceptance criteria kiểm tra được; hỏi user nếu thiếu lựa chọn có thể đổi đáng kể outcome.
-3. `PLAN`: chọn bước nhỏ nhất hợp lý, nhận diện risk/authority và goal alignment.
-4. `CHECKPOINT`: với task nhiều bước/rủi ro, ghi `Run ID`, goal/alignment, definition of done, repair count, blocker fingerprint và changed paths dự kiến vào `STATE.md`.
-5. `IMPLEMENT`: thay đổi trong scope, bảo toàn work không liên quan của user và rollback path.
-6. `VERIFY`: chạy test/lint/build/check tương xứng; lưu command, result, time và evidence path. Không nói PASS nếu thiếu evidence.
-7. `REVIEW`: đọc diff/output; kiểm tra requirement, milestone contribution, regression, edge case, scope/authority, context drift, security và sensitive data. Tự review không phải independent review.
-8. `REPAIR`: chỉ sửa lỗi có evidence, tăng `Repair attempt`, giữ cùng `Blocker fingerprint`, rồi verify lại. Cùng fingerprint còn sau hai chu kỳ thì dừng và báo root cause/evidence/options.
-9. `LEARN`: quyết định có kiến thức bền vững đáng lưu hay không.
-10. `SYNC`: cập nhật memory tối thiểu theo `stage -> validate -> apply`; không ghi vụn vặt.
-11. `REPORT`: nêu outcome, checks/evidence, memory update, risks/remaining work; kết thúc checkpoint bằng `COMPLETE|BLOCKED` đúng sự thật.
+Chọn `TRIVIAL|STANDARD|HIGH_RISK|GOVERNANCE`: trivial trả lời/sửa nhỏ, không checkpoint/retrieval/memory; standard implement-verify-review; high-risk thêm checkpoint/rollback; governance cho rule-caused friction. Chỉ nâng khi risk tăng.
 
-Checkpoint phải đủ để phiên mới tiếp tục mà không đoán repair count hoặc verification state. Task đơn giản không cần run log hình thức. Delegation hay session mới không reset repair count hoặc blocker fingerprint.
+Luồng hữu hạn:
+
+- `UNDERSTAND -> DIRECT_REPORT -> COMPLETE` (`TRIVIAL`).
+- `UNDERSTAND -> DEFINE_DONE -> PLAN -> IMPLEMENT -> VERIFY -> REVIEW -> REPORT -> COMPLETE` (`STANDARD|HIGH_RISK`); bỏ bước không áp dụng nếu vẫn đạt outcome.
+- `VERIFY_FAIL -> REPAIR -> VERIFY`; hết budget thành `BLOCKED`.
+- `REVIEW -> META_REVIEW -> PROPOSAL -> AWAITING_USER_DECISION` khi có governance trigger.
+
+`COMPLETE|BLOCKED|AWAITING_USER_DECISION` là terminal. Cùng `Run ID` không quay `REPORT` về `UNDERSTAND`, né budget, gọi lại meta-review hay review proposal. Chỉ `new user input or external evidence` mở run.
+
+Ceiling/run: `repair<=2|review<=2|meta-review<=1|proposal<=1|memory-transaction<=1`. Repair là tổng dù fingerprint đổi; delegation/session/reload không reset repair count. Review 2 chỉ sau sửa từ review 1. Memory transaction là durable `LEARN/SYNC` đã gộp, không tính checkpoint. Hết budget vào terminal, báo evidence/options.
+
+`UNDERSTAND/DEFINE_DONE/PLAN` xác định request, goal, done, risk/authority, bước nhỏ nhất, record match. `CHECKPOINT` chỉ cho task nhiều bước/rủi ro, handoff, repair/resume; ghi profile, budget, fingerprint, paths; task đơn giản không run log. `IMPLEMENT` giữ scope/work user/rollback. `VERIFY` theo risk, không claim PASS thiếu evidence. Trivial mutation check inline; mutation khác qua `REVIEW`, kiểm tra diff/output, regression, authority, security; tự review không independent. `REPAIR` cần evidence rồi verify. `LEARN` chỉ cho kiến thức mới, tái dùng, có evidence, đổi quyết định; nếu không `NO_DURABLE_LEARNING`. `SYNC` chỉ khi có delta, nếu không `NO_MEMORY_DELTA`; dùng một `stage -> validate -> apply`. `REPORT` nêu outcome, evidence, memory delta, risk, terminal.
+
+## Meta-review và cải tiến
+
+`REVIEW` xét output và governance fitness. Meta-review một lần khi rule gây repair lặp, user phải sửa, overhead vô ích, regression hoặc assumption stale; lỗi task/vặt không kích hoạt.
+
+Khi evidence material, mở/cập nhật một `SELF_IMPROVEMENT_PROPOSAL`; phân loại `PROJECT_SPECIFIC|FRAMEWORK_CORE` và `SAFETY_INVARIANT|USER_BOUNDARY|PROCEDURAL_DEFAULT|CAPABILITY_ASSUMPTION`; nêu evidence, impact, change, risk, test/rollback, owner. Gộp root cause; proposal dừng ở `AWAITING_USER_DECISION`, không tự implement/review hay sinh meta-proposal.
+
+Lifecycle: `FRICTION -> DIAGNOSED -> PROPOSED -> ACCEPTED|REJECTED -> IMPLEMENTED -> BEHAVIORALLY_VERIFIED`. Proposal framework là decision `PROPOSED`, retrieve bằng `IncludeProposed`; proposal/test PASS không tự cấp `ACCEPTED`, sửa core, activation hay authority. Cải tiến project theo memory/lesson/skill; framework theo core update.
 
 ## RECALIBRATION — chống context drift
 
@@ -250,7 +259,7 @@ Lifecycle: `OBSERVED -> PROPOSED -> DRAFT -> EVALUATED -> APPROVED -> ENABLED ->
 
 ## Core update, release và kiểm chứng
 
-Normal project learning không sửa `AGENTS.md`. Chỉ đề xuất framework-core update khi có evidence áp dụng rộng cho Agent Zero trên nhiều project hoặc user trực tiếp yêu cầu. Trước core update:
+Normal project learning không sửa `AGENTS.md`. Đề xuất framework-core update khi meta-review có evidence rule core gây cản trở có thể tái diễn hoặc rủi ro cao, evidence áp dụng rộng, hay user trực tiếp yêu cầu; quan sát riêng project còn yếu thì giữ ở project memory. Trước core update:
 
 1. Nêu issue, evidence và vì sao project memory/policy/test/skill không đủ.
 2. Đề xuất diff nhỏ nhất và kiểm tra trùng/mâu thuẫn.
@@ -264,7 +273,7 @@ Validator phải từ chối nếu core thiếu lifecycle/authority/review/repai
 
 ## Trải nghiệm dẫn dắt user
 
-Ở mỗi phase, nói rõ agent đang ở state nào và vì sao; đã biết/còn thiếu gì; quyết định nào user cần đưa ra ngay; và bước tiếp theo. Không biến onboarding thành questionnaire cứng hoặc chặn task hữu ích chỉ vì memory chưa hoàn hảo.
+Không thuật lại mọi internal phase. Chỉ cập nhật khi việc kéo dài, có kết quả hữu ích, vào `REPAIR`, gặp blocker/risk hoặc cần quyết định; task ngắn trả outcome trực tiếp. Nêu state, evidence, điều thiếu, bước tiếp; không biến onboarding thành questionnaire.
 
 ## Definition of done cho Agent Zero
 

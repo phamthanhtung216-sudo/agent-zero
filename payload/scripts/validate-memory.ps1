@@ -256,21 +256,54 @@ if (Test-Path -LiteralPath $statePath -PathType Leaf) {
     $projectPhase = Require-Field $stateText "Project phase" ".agent/STATE.md"
     $runId = Require-Field $stateText "Run ID" ".agent/STATE.md"
     $stateTaskStatus = Require-Field $stateText "Status" ".agent/STATE.md"
+    $executionProfile = Require-Field $stateText "Execution profile" ".agent/STATE.md"
     $loopPhase = Require-Field $stateText "Loop phase" ".agent/STATE.md"
     $repairAttemptText = Require-Field $stateText "Repair attempt" ".agent/STATE.md"
     $repairLimitText = Require-Field $stateText "Repair limit" ".agent/STATE.md"
+    $reviewPassText = Require-Field $stateText "Review pass" ".agent/STATE.md"
+    $reviewLimitText = Require-Field $stateText "Review limit" ".agent/STATE.md"
+    $metaReviewCountText = Require-Field $stateText "Meta-review count" ".agent/STATE.md"
+    $metaReviewLimitText = Require-Field $stateText "Meta-review limit" ".agent/STATE.md"
+    $proposalCountText = Require-Field $stateText "Proposal count" ".agent/STATE.md"
+    $proposalLimitText = Require-Field $stateText "Proposal limit" ".agent/STATE.md"
+    $memoryTransactionCountText = Require-Field $stateText "Memory transaction count" ".agent/STATE.md"
+    $memoryTransactionLimitText = Require-Field $stateText "Memory transaction limit" ".agent/STATE.md"
     $blockerFingerprint = Require-Field $stateText "Blocker fingerprint" ".agent/STATE.md"
-    if ($stateSchema -ne "4") { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md Schema must be 4, found: $stateSchema" }
+    if ($stateSchema -ne "5") { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md Schema must be 5, found: $stateSchema" }
     if ($projectPhase -notin @("BOOTSTRAP", "ACTIVE", "RECALIBRATION")) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md Project phase is invalid: $projectPhase" }
     if ($projectStatus -and $projectPhase -ne $projectStatus) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md Project phase ($projectPhase) must match PROJECT.md Status ($projectStatus)" }
-    if ($stateTaskStatus -notin @("NOT_STARTED", "IN_PROGRESS", "BLOCKED", "COMPLETE")) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md task Status is invalid: $stateTaskStatus" }
-    if ($loopPhase -notin @("UNDERSTAND", "DEFINE_DONE", "PLAN", "CHECKPOINT", "IMPLEMENT", "VERIFY", "REVIEW", "REPAIR", "LEARN", "SYNC", "REPORT", "IDLE", "BLOCKED", "COMPLETE")) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md Loop phase is invalid: $loopPhase" }
-    $repairAttempt = 0; $repairLimit = 0
+    if ($stateTaskStatus -notin @("NOT_STARTED", "IN_PROGRESS", "BLOCKED", "COMPLETE", "AWAITING_USER_DECISION")) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md task Status is invalid: $stateTaskStatus" }
+    if ($executionProfile -notin @("TRIVIAL", "STANDARD", "HIGH_RISK", "GOVERNANCE")) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Execution profile is invalid: $executionProfile" }
+    if ($loopPhase -notin @("UNDERSTAND", "DIRECT_REPORT", "DEFINE_DONE", "PLAN", "CHECKPOINT", "IMPLEMENT", "VERIFY", "REVIEW", "REPAIR", "LEARN", "SYNC", "REPORT", "META_REVIEW", "PROPOSAL", "IDLE", "BLOCKED", "COMPLETE", "AWAITING_USER_DECISION")) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Loop phase is invalid: $loopPhase" }
+    $repairAttempt = 0; $repairLimit = 0; $reviewPass = 0; $reviewLimit = 0
+    $metaReviewCount = 0; $metaReviewLimit = 0; $proposalCount = 0; $proposalLimit = 0
+    $memoryTransactionCount = 0; $memoryTransactionLimit = 0
     if (-not [int]::TryParse($repairAttemptText, [ref]$repairAttempt) -or $repairAttempt -lt 0) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md Repair attempt must be a non-negative integer" }
     if (-not [int]::TryParse($repairLimitText, [ref]$repairLimit) -or $repairLimit -ne 2) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md Repair limit must be 2" }
     if ($repairAttempt -gt $repairLimit) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md Repair attempt ($repairAttempt) exceeds Repair limit ($repairLimit)" }
+    if (-not [int]::TryParse($reviewPassText, [ref]$reviewPass) -or $reviewPass -lt 0) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Review pass must be a non-negative integer" }
+    if (-not [int]::TryParse($reviewLimitText, [ref]$reviewLimit) -or $reviewLimit -ne 2) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Review limit must be 2" }
+    if ($reviewPass -gt $reviewLimit) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Review pass ($reviewPass) exceeds Review limit ($reviewLimit)" }
+    if (-not [int]::TryParse($metaReviewCountText, [ref]$metaReviewCount) -or $metaReviewCount -lt 0) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Meta-review count must be a non-negative integer" }
+    if (-not [int]::TryParse($metaReviewLimitText, [ref]$metaReviewLimit) -or $metaReviewLimit -ne 1) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Meta-review limit must be 1" }
+    if ($metaReviewCount -gt $metaReviewLimit) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Meta-review count ($metaReviewCount) exceeds Meta-review limit ($metaReviewLimit)" }
+    if (-not [int]::TryParse($proposalCountText, [ref]$proposalCount) -or $proposalCount -lt 0) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Proposal count must be a non-negative integer" }
+    if (-not [int]::TryParse($proposalLimitText, [ref]$proposalLimit) -or $proposalLimit -ne 1) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Proposal limit must be 1" }
+    if ($proposalCount -gt $proposalLimit) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Proposal count ($proposalCount) exceeds Proposal limit ($proposalLimit)" }
+    if (-not [int]::TryParse($memoryTransactionCountText, [ref]$memoryTransactionCount) -or $memoryTransactionCount -lt 0) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Memory transaction count must be a non-negative integer" }
+    if (-not [int]::TryParse($memoryTransactionLimitText, [ref]$memoryTransactionLimit) -or $memoryTransactionLimit -ne 1) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Memory transaction limit must be 1" }
+    if ($memoryTransactionCount -gt $memoryTransactionLimit) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Memory transaction count ($memoryTransactionCount) exceeds Memory transaction limit ($memoryTransactionLimit)" }
     if ($loopPhase -eq "REPAIR" -and $repairAttempt -lt 1) { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md REPAIR phase requires Repair attempt >= 1" }
+    if ($loopPhase -eq "REVIEW" -and $reviewPass -lt 1) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md REVIEW phase requires Review pass >= 1" }
+    if ($loopPhase -eq "META_REVIEW" -and $metaReviewCount -lt 1) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md META_REVIEW phase requires Meta-review count = 1" }
+    if ($loopPhase -eq "PROPOSAL" -and $proposalCount -lt 1) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md PROPOSAL phase requires Proposal count = 1" }
+    if ($proposalCount -gt $metaReviewCount) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md Proposal count cannot exceed Meta-review count" }
+    if (($metaReviewCount -gt 0 -or $proposalCount -gt 0) -and $executionProfile -ne "GOVERNANCE") { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md meta-review or proposal requires GOVERNANCE execution profile" }
     if ($stateTaskStatus -eq "BLOCKED" -and $blockerFingerprint -eq "NONE") { Add-ValidationError "AZ-MEMORY-SCHEMA" ".agent/STATE.md BLOCKED status requires a Blocker fingerprint" }
+    $terminalPairs = @{ "COMPLETE" = "COMPLETE"; "BLOCKED" = "BLOCKED"; "AWAITING_USER_DECISION" = "AWAITING_USER_DECISION" }
+    if ($terminalPairs.ContainsKey($stateTaskStatus) -and $loopPhase -ne $terminalPairs[$stateTaskStatus]) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md terminal Status $stateTaskStatus requires Loop phase $($terminalPairs[$stateTaskStatus])" }
+    if ($loopPhase -in @("COMPLETE", "BLOCKED", "AWAITING_USER_DECISION") -and $stateTaskStatus -ne $loopPhase) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md terminal Loop phase $loopPhase requires matching task Status" }
+    if ($stateTaskStatus -eq "COMPLETE" -and $executionProfile -in @("STANDARD", "HIGH_RISK") -and $reviewPass -lt 1) { Add-ValidationError "AZ-MEMORY-LOOP" ".agent/STATE.md completed STANDARD or HIGH_RISK task requires Review pass >= 1" }
 
     $goalLink = Require-Field $stateText "Goal link" ".agent/STATE.md"
     $alignmentStatus = Require-Field $stateText "Alignment status" ".agent/STATE.md"
