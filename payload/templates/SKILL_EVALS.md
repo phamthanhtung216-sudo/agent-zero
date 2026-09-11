@@ -1,8 +1,16 @@
 # Skill Candidate Evals
 
 - Status: `DRAFT`
+- Registry ID: `S-001`
+- Provider ID: `CP-001`
+- Capability key: `replace.capability`
 - Skill name: `replace-with-skill-name`
+- Created by run: `UNKNOWN`
+- Evaluated by: `NONE`
+- Evaluator run: `NONE`
 - Last run: `NOT_RUN`
+- Evaluation artifact: `NONE`
+- Evaluation SHA256: `UNKNOWN`
 - Approved by: `NONE`
 
 ## Positive triggers
@@ -25,7 +33,8 @@
 
 ## Promotion record
 
-- Candidate hash: `UNKNOWN`
+- Candidate SHA256: `UNKNOWN`
 - Approval reference: `NONE`
 - Destination: `.agents/skills/replace-with-skill-name`
+- Expected active SHA256: `UNKNOWN`
 - Rollback path: `UNKNOWN`

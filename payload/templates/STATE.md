@@ -1,8 +1,9 @@
 # Current State
 
-- Schema: `5`
+- Schema: `6`
 - Project phase: `BOOTSTRAP`
 - Run ID: `UNASSIGNED`
+- Logical task ID: `UNASSIGNED`
 - Current objective: `UNKNOWN`
 - Last updated: `UNKNOWN`
 
@@ -24,6 +25,9 @@
 
 - Execution profile: `STANDARD`
 - Loop phase: `UNDERSTAND`
+- Task phase: `SINGLE_PHASE`
+- Audit status: `NOT_APPLICABLE`
+- Remediation authority: `NOT_REQUIRED`
 - Repair attempt: `0`
 - Repair limit: `2`
 - Review pass: `0`
@@ -34,6 +38,21 @@
 - Proposal limit: `1`
 - Memory transaction count: `0`
 - Memory transaction limit: `1`
+- Sub-agent starts: `0`
+- Sub-agent start limit: `3`
+- Full-matrix runs: `0`
+- Full-matrix limit: `2`
+- Full-matrix last result: `NOT_RUN`
+- Full-matrix rerun reason: `NONE`
+- Full-matrix retry state: `NOT_REQUIRED`
+- Full-matrix failure repair baseline: `NONE`
+- Full-matrix retry evidence: `NONE`
+- Usage used percent: `UNKNOWN`
+- Usage gate: `UNKNOWN`
+- Usage warning issued: `NO`
+- Quota checkpoint summary: `NONE`
+- Quota checkpoint next action: `NONE`
+- Quota resume condition: `NONE`
 - Blocker fingerprint: `NONE`
 - Changed paths: `NONE`
 

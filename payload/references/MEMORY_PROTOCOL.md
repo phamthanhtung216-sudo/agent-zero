@@ -37,15 +37,18 @@ Mỗi mutation đi theo `stage -> validate -> apply`:
 
 Không lưu secret, credential, personal data hoặc log nhạy cảm vào memory/evidence.
 
+Capability external/user là read-only. Không persist body của skill/custom agent, bulk catalog, home inventory hoặc absolute personal path; khi dependency thực sự đổi quyết định tương lai, chỉ lưu logical identity, source class, availability/provenance tối thiểu và evidence không nhạy cảm. Repo-existing provider giữ ownership legacy trong adoption inventory; chỉ artifact có provenance Agent-Zero-owned mới chịu lifecycle/eval/promotion của Agent Zero.
+
 ## Hot/cold context và quota
 
 - Hot control plane: `AGENTS.md`, `.agent/PROJECT.md`, `.agent/STATE.md`, `.agent/CONTEXT_INDEX.md`. Binding authority, safety, current goal/scope không được chỉ tồn tại trong cold detail.
-- `STATE.md` là snapshot hiện tại, không phải history. `LESSONS.md` và `DECISIONS.md` chỉ là hot index; body ở detail record có SHA-256.
+- `STATE.md` schema 6 là snapshot hiện tại, không phải history; nó giữ `Logical task ID`, task phase, sub-agent/full-matrix counters, matrix retry chain và usage gate. Retry đã `VERIFIED` khóa repair baseline/count và PASS evidence để không thể rebase thành repair thứ hai. Từ 90% khi task đang làm, quota checkpoint phải có summary, next action và `USAGE_BELOW_90`; không có authorization bypass. Nếu telemetry sau đó là `UNKNOWN`, checkpoint phải được giữ nguyên cho tới khi có số xác nhận dưới 90. Schema 5 chỉ được installer đọc ở compatibility mode; checkpoint tiếp theo phải migrate có kiểm chứng, không reset counter đã biết.
 - Trước task có ý nghĩa, tạo fingerprint từ task type, path/component, tool và error signature; chạy `.agent-zero/scripts/select-context.ps1` hoặc source lab `scripts/select-context.ps1`.
-- Exclusion thắng match; nạp whole selected records trong budget. Chạy lại khi fingerprint đổi, verify fail bất ngờ, vào `REPAIR`, hoặc có history/conflict/recalibration/rollback/adoption audit. Archive cần fallback reason rõ.
+- Exclusion thắng match; mọi `CRITICAL` record khớp ít nhất một fingerprint signal được preflight và giữ trước noncritical records. Nạp whole selected records trong budget; tổng CRITICAL hoặc capability dependency closure vượt quota phải fail rõ thay vì silent truncation. Chạy lại khi fingerprint đổi, verify fail bất ngờ, vào `REPAIR`, hoặc có history/conflict/recalibration/rollback/adoption audit. Archive cần fallback reason rõ.
 - Enforce `CONTEXT_INDEX.md`: warning theo ngưỡng, fail vượt hard limit; không tăng ceiling để né validator. Khi overflow, compact current truth hoặc rotate whole record lossless rồi cập nhật pointer/hash.
-- Không copy code, schema, README, log hay tool output dài; lưu evidence path. Không ghi mọi task; gộp entry trùng và chỉ giữ điều có thể đổi quyết định tương lai.
+- Không copy code, schema, README, log hay tool output dài; chỉ giữ command, exit, `PASS|FAIL`, lỗi liên quan và evidence path. Không ghi mọi task; gộp trùng, giữ điều có thể đổi quyết định.
 - Selector/index/hash hỏng trong task rủi ro cao thì dừng mutation và sửa/restore memory trước.
+- Catalog rỗng hoặc không liên quan không tạo memory transaction. Resolver/provider/delegation không reset ceiling durable sync của parent run.
 
 ## Learning loop
 
@@ -62,4 +65,4 @@ Chỉ ghi lesson khi có trigger metadata, symptom, context/scope, root cause ho
 
 Giữ `AGENTS.md` là complete stable core. Project fact, lesson, convention và preference phát sinh chỉ được ghi vào `.agent/`, project policy, executable guard hoặc approved skill; normal learning không được append hay promote trực tiếp vào core.
 
-Chỉ đề xuất sửa `AGENTS.md` trong một Agent Zero framework release riêng khi user trực tiếp yêu cầu hoặc evidence chứng minh thay đổi áp dụng rộng cho Agent Zero trên nhiều project. Trước khi áp dụng: nêu issue/evidence và vì sao project memory/policy/test/skill không đủ; đề xuất diff nhỏ nhất; kiểm tra trùng/mâu thuẫn; xin explicit user approval; snapshot core/release-critical files; bump version; validate core invariants, semantics, retrieval, installer và source/dist hashes; nhắc instruction mới được nạp đáng tin từ phiên Codex tiếp theo.
+Chỉ sửa `AGENTS.md` trong framework release riêng khi user yêu cầu hoặc evidence áp dụng rộng. Trước khi áp dụng: nêu issue/evidence và vì sao memory/policy/test/skill không đủ; diff nhỏ nhất; kiểm tra conflict; xin approval; snapshot core/release files; bump version; validate canonical source bằng focused checks, rồi rebuild dist và chạy full matrix/source-dist hashes ở cuối; nhắc instruction mới được nạp đáng tin từ phiên Codex tiếp theo.

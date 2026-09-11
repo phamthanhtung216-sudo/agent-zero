@@ -1,11 +1,13 @@
 # Context Index
 
-- Schema: `1`
+- Schema: `2`
 - Retrieval mode: `DETERMINISTIC`
 - Default hot byte limit: `65536`
 - Retrieved detail byte limit: `16384`
 - Max retrieved records: `8`
 - Detail record byte limit: `4096`
+- Retrieved registry byte limit: `8192`
+- Max retrieved registry rows: `24`
 - Changelog entry limit: `30`
 - Archive root: `.agent/archive`
 - Last validated: `UNKNOWN`
@@ -23,16 +25,18 @@ File này là control plane cho project memory. Nó mô tả phần context đư
 | `.agent/LESSONS.md` | `INDEX_ONLY` | `13107` | `16384` | `Move retired records to archive and keep active pointers` |
 | `.agent/DECISIONS.md` | `INDEX_ONLY` | `13107` | `16384` | `Move superseded records to archive and keep active pointers` |
 | `.agent/SKILLS.md` | `MATCH` | `13107` | `16384` | `Archive retired registry rows` |
+| `.agent/CAPABILITIES.md` | `MATCH` | `13107` | `16384` | `Keep only project-relevant providers and reusable routing decisions` |
+| `.agent/SUBAGENTS.md` | `MATCH` | `13107` | `16384` | `Archive retired managed-profile rows` |
 | `.agent/CHANGELOG.md` | `AUDIT_ONLY` | `19661` | `24576` | `Rotate oldest complete entries to the archive root` |
 
 `ALWAYS` và `ACTIVE_TASK` tạo default hot control plane. `INDEX_ONLY` chỉ được selector đọc để tạo summary; không đưa nguyên index vào prompt. `MATCH` chỉ được đọc khi task fingerprint khớp. `AUDIT_ONLY` chỉ dùng để truy vết, migration hoặc rollback. Evidence, logs, snapshots và generated artifacts là `EVIDENCE_ONLY` hoặc `NEVER_DEFAULT` dù không có row riêng.
 
 ## Retrieval contract
 
-1. Đọc core, project contract, current state và file này; để selector đọc hai index lesson/decision thay vì đưa toàn bộ index vào prompt.
+1. Đọc core, project contract, current state và file này; để selector đọc index lesson/decision và chỉ chọn registry rows khớp thay vì đưa toàn bộ index vào prompt.
 2. Tạo task fingerprint từ goal, task type, paths/components, tools và error signatures đang có.
 3. Chạy selector tại `scripts/select-context.ps1` trong source lab hoặc `.agent-zero/scripts/select-context.ps1` trong project đã cài.
-4. Chỉ nạp detail records được selector trả về; exclusion thắng positive match, sau đó xếp theo match score, priority và ID.
+4. Chỉ nạp detail records được selector trả về; exclusion thắng positive match. Mọi `CRITICAL` record khớp ít nhất một signal phải được preflight và giữ trước noncritical records; phần còn lại xếp theo match score, status, priority và ID.
 5. Khi verification fail bất ngờ, bước vào `REPAIR`, user hỏi lịch sử, hoặc có conflict/rollback, chạy retrieval lại với signals mới và có thể tìm archive.
 6. Không cắt giữa record và không vượt record/byte budget. Nếu selector hoặc index hỏng trong task rủi ro cao, dừng mutation và sửa/khôi phục memory trước.
 
@@ -42,6 +46,9 @@ File này là control plane cho project memory. Nó mô tả phần context đư
 |---|---|---|---|
 | Lessons | `.agent/LESSONS.md` | `.agent/lessons/` | `.agent/archive/lessons/` |
 | Decisions | `.agent/DECISIONS.md` | `.agent/decisions/` | `.agent/archive/decisions/` |
+| Capabilities | `.agent/CAPABILITIES.md` | Registry rows only | `SUPERSEDED` rows or changelog provenance |
+| Skills | `.agent/SKILLS.md` | Managed candidate/active pointers | `RETIRED` rows |
+| Persistent sub-agents | `.agent/SUBAGENTS.md` | Managed candidate/active pointers | `RETIRED` rows |
 | Changelog | `.agent/CHANGELOG.md` | `.agent/CHANGELOG.md` | `.agent/archive/changelog/` |
 
 Archive lookup dùng `.agent/archive/LESSONS_INDEX.md` và `.agent/archive/DECISIONS_INDEX.md`; selector chỉ đọc hai index này khi có `IncludeArchive` cùng lý do history, regression, repair, conflict, recalibration, rollback hoặc adoption audit.

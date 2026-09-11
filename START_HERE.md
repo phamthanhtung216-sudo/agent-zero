@@ -2,7 +2,7 @@
 
 `START_HERE.md` là hướng dẫn dành cho người sử dụng Agent Zero.
 
-Kit này dùng được cho cả project mới và project đã có `AGENTS.md`, `CLAUDE.md` hoặc context cũ. Installer tự kiểm tra trước, giải thích kết quả và đề xuất chế độ an toàn; bạn chỉ cần xác nhận lựa chọn. Không copy đè bất kỳ file agent hiện hữu nào.
+Kit này dùng được cho cả project mới và project đã có `AGENTS.md`, `CLAUDE.md`, skill, custom agent hoặc context cũ. Installer tự kiểm tra trước, giải thích kết quả và đề xuất chế độ an toàn; bạn chỉ cần xác nhận lựa chọn. Không copy đè bất kỳ file agent hiện hữu nào.
 
 Project mới dùng complete stable core cùng bounded indexed context memory: mọi rule hành vi bắt buộc nằm trực tiếp trong `AGENTS.md`, còn project facts, lesson và decision detail tăng trưởng dưới `.agent/` và chỉ được nạp khi task fingerprint khớp. Supporting references là checklist tùy chọn; archive giữ lịch sử lossless nhưng không được nạp mặc định. Normal project learning không sửa core.
 
@@ -100,6 +100,8 @@ Agent Zero sẽ:
 
 Project mới cũng nhận `.agent/SKILLS.md`. Skill chưa được duyệt phải được soạn dưới `.agent/skill-candidates/`; không đặt draft trực tiếp trong `.agents/skills`.
 
+Project mới còn nhận `.agent/CAPABILITIES.md` và `.agent/SUBAGENTS.md`. Agent Zero chỉ quản lý skill/custom agent có registry linkage và namespace riêng của project. Skill hoặc custom agent đã có sẵn vẫn là provider read-only: agent có thể reuse hoặc compose khi phù hợp, nhưng không sửa, rename, vô hiệu hóa hay ép chúng theo schema Agent Zero.
+
 Nếu host có công cụ sub-agent, Agent Zero có thể điều phối tối đa ba workstream độc lập theo policy trong `AGENTS.md`. Agent chính vẫn giữ authority, quyền ghi instruction/memory và trách nhiệm tích hợp, kiểm chứng kết quả.
 
 Bạn chỉ cần trả lời các câu hỏi quan trọng và xác nhận những quyết định thuộc về sản phẩm.
@@ -130,10 +132,24 @@ Installer không:
 - Tự động migration hoặc cutover khi chưa được bạn phê duyệt.
 - Tự ghi `VERIFIED` chỉ vì verification đã pass hoặc vì user chưa phản hồi.
 - Tự động promote skill candidate thành active skill chỉ vì validation đã pass.
+- Crawl thư mục user để copy skill/custom-agent body, hoặc sửa user/global capability và config.
+- Tạo custom agent persistent, pin model/MCP/quyền rộng hoặc ghi vào active discovery root trước approval.
 - Suy ra roadmap tương lai từ code cũ hoặc tự chuyển proposal thành product intent đã chấp nhận.
 
 Ở project mới, installer tạo một `CLAUDE.md` tối thiểu chỉ để Claude Code nhập `AGENTS.md`. Nếu đã có bất kỳ Claude/Codex/Cursor context nào, installer chuyển sang `ADOPTION` thay vì tạo adapter này.
 
 ## Khi installer dừng để bảo vệ project
 
-Installer sẽ từ chối ghi file nếu phát hiện nguy cơ ghi đè, payload không đầy đủ, hoặc Agent Zero đã được cài trước đó. Khi gặp trường hợp này, giữ nguyên project và đọc thông báo lỗi trước khi tiếp tục.
+Installer sẽ từ chối ghi file nếu phát hiện nguy cơ ghi đè, payload không đầy đủ, hoặc Agent Zero đã được cài trước đó mà không có yêu cầu upgrade explicit. Khi gặp trường hợp này, giữ nguyên project và đọc thông báo lỗi trước khi tiếp tục.
+
+## Nâng cấp bản v0.10.0 đã cài
+
+Sau khi thay thư mục kit bằng v0.11.1, chạy lệnh sau từ terminal:
+
+```powershell
+& "D:\Projects\my-project\agent-zero-kit\install-agent-zero.ps1" -TargetPath "D:\Projects\my-project" -UpgradeExisting
+```
+
+Đường này chỉ hỗ trợ `0.10.0 -> 0.11.1` và yêu cầu nhận diện đúng một core Agent Zero active hoặc candidate. Installer xác minh payload, snapshot core cùng `.agent-zero/` vào `.agent-zero-upgrade/snapshots/`, cập nhật các file Agent Zero sở hữu rồi validate. Nếu validation fail, bản v0.10.0 được restore và kiểm tra hash.
+
+Upgrade không sửa `.agent/`, `.agents/skills/`, `.codex/agents/` hoặc capability user/global. Nếu hai registry capability mới đều chưa có, v0.11.1 chạy `LEGACY_COMPATIBILITY`; STATE schema 5 được giữ byte-for-byte và chỉ migrate sang schema 6 ở checkpoint được validate. Trạng thái chỉ có một registry bị từ chối vì đó là schema dang dở.

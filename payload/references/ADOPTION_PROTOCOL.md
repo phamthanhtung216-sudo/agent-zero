@@ -11,6 +11,8 @@ Trước mọi thay đổi:
 3. Phân biệt file Codex có thể tự nạp với tài liệu của agent khác. Hash chỉ phát hiện drift, không chứng minh nội dung đúng.
 4. Tạo hoặc tiếp tục `.agent-zero/adoption/ADOPTION.md`; không tạo active `.agent/PROJECT.md` làm migration trông như đã được chấp thuận.
 
+Skill/custom agent/provider đã có trong repository là inventory legacy, kể cả khi trùng tên hoặc chức năng với capability Agent Zero. Giữ ownership và hash; không sửa, ép schema/eval mới hoặc nhận chúng là Agent-Zero-owned. Capability ngoài repo chỉ được biết qua catalog/runtime metadata read-only; không crawl home, snapshot/copy nội dung hay lưu absolute personal path. External capability một mình không làm project rỗng thành `ADOPTION`.
+
 ## Semantic inventory và goal reconstruction
 
 Tóm tắt, không copy dài; mỗi claim có source path và confidence:
@@ -36,6 +38,8 @@ Phân loại từng mục:
 
 Không dùng last-write-wins và không retire nội dung chỉ vì file khác mới hơn.
 
+Với capability, ghi thêm kết quả `REUSE|COMPOSE|SPECIALIZE|CONFLICT|FALLBACK` khi liên quan; catalog rỗng/không liên quan giữ `BASELINE|IGNORE`. Availability `MISSING` không tự cấp quyền tạo, cài hay thay provider.
+
 ## Migration plan và approval
 
 Mỗi action nêu source, destination, `KEEP|MAP|MERGE|ARCHIVE`, rủi ro và rollback. User phải duyệt trước khi sửa active instruction, chuyển product intent/security/decision, archive legacy context hoặc bắt đầu cutover. User có thể duyệt một phần; phần còn lại ở shadow.
@@ -50,6 +54,8 @@ Ngay trước sửa đầu tiên:
 ## Staged cutover
 
 Áp patch nhỏ nhất: giữ rule cũ còn đúng, thêm routing/lifecycle, chuyển context theo nhóm với provenance, chạy existing checks/context-loss checks và ít nhất một task đại diện.
+
+Cutover không silent overwrite skill/custom agent, user/global config, model hoặc MCP. Artifact mới do Agent Zero tạo vẫn phải project-local, namespaced, evaluated và được explicit approval riêng trước activation; adoption approval không thay thế capability approval.
 
 Lifecycle bắt buộc:
 

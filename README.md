@@ -8,9 +8,20 @@ Mục tiêu là giúp bạn bớt phải giải thích lại từ đầu, dễ b
 
 Agent Zero là bộ hướng dẫn, file bộ nhớ và công cụ kiểm tra chạy cùng một **coding agent** — tức trợ lý AI có thể đọc, sửa file và chạy lệnh trong dự án. Bạn vẫn cần một công cụ như Codex hoặc Claude Code để thực hiện công việc.
 
-**Bản hiện tại: v0.10.0 · Bộ cài Windows · Hướng dẫn bằng tiếng Việt**
+**Bản hiện tại: v0.11.1 · Bộ cài Windows · Hướng dẫn bằng tiếng Việt**
 
 [Cài bằng Git](#cài-đặt) · [Tải bộ cài ZIP](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest) · [Hướng dẫn chi tiết](START_HERE.md) · [Báo lỗi / góp ý](https://github.com/phamthanhtung216-sudo/agent-zero/issues)
+
+## Cập nhật v0.11.1
+
+Phiên bản này tập trung giảm việc tiêu quota ngoài dự kiến khi Agent Zero audit hoặc sửa một project lớn:
+
+- Audit và phần sửa tiếp theo giữ nguyên một task; lệnh `continue` hoặc mở lại phiên không tạo ngân sách mới. Toàn task chỉ được start tối đa ba sub-agent.
+- Khi mức dùng Codex đạt 80%, Agent Zero cảnh báo trước khi nhận việc lớn. Từ 90%, agent phải tóm tắt việc đang làm, ghi đúng bước tiếp theo rồi dừng phần tốn quota cho tới khi mức dùng được xác nhận đã xuống dưới 90%.
+- Full matrix thường chỉ chạy một lần ở cuối. Lượt thứ hai chỉ được phép nếu lượt đầu thất bại, đã có đúng một lần sửa tập trung và focused check đã PASS.
+- Agent Zero không tự đổi model hoặc reasoning để né quota. Installer hỗ trợ nâng cấp bản cài nguyên gốc từ v0.10.0 lên v0.11.1 với snapshot và giữ nguyên bộ nhớ, skill cùng custom agent của project.
+
+Các gate trên giúp giới hạn vòng lặp và giữ điểm tiếp tục rõ ràng; chúng không làm quota Codex tự reset và cũng không bảo đảm mọi workload sẽ dùng cùng một lượng quota.
 
 ## Agent Zero giúp bạn làm gì?
 
@@ -21,10 +32,12 @@ Agent Zero là bộ hướng dẫn, file bộ nhớ và công cụ kiểm tra ch
 | AI rút kinh nghiệm từ lỗi cũ | Ghi bài học có bằng chứng và tìm lại bài học liên quan trước công việc tương tự. |
 | AI nhận ra chính quy trình của nó đang cản việc | Review rule của Agent Zero, chủ động đưa proposal có bằng chứng và chờ bạn duyệt trước khi đổi core. |
 | AI không biến mọi câu hỏi thành quy trình dài | Chọn profile theo độ phức tạp, giới hạn số vòng review/repair và dừng ở terminal state rõ ràng. |
+| AI không âm thầm đốt quota khi audit lớn | Giữ audit+sửa trong một logical task, đếm tối đa ba lần start sub-agent, cảnh báo ở 80%; từ 90% lưu hiện trạng/next action rồi chờ quota giảm, không có bypass hoặc tự đổi model. |
 | Hiểu biết của AI theo kịp dự án | Cập nhật trạng thái và thông tin kỹ thuật khi có bằng chứng mới; chỉ ra mâu thuẫn cần bạn quyết định. |
 | Dự án lớn dần mà context vẫn có tổ chức | Chia bộ nhớ theo tầng, dùng mục lục và chỉ lấy những chi tiết phù hợp với công việc. |
 | Biết một việc đã thực sự xong chưa | Đặt tiêu chí hoàn thành, chạy kiểm tra và báo kết quả, lỗi hoặc phần còn thiếu. |
 | Thêm khả năng mới cho agent | Đề xuất quy trình tái sử dụng thành **skill** — một bộ hướng dẫn chuyên cho một loại việc — rồi đánh giá trước khi xin bạn kích hoạt. |
+| Dùng cùng skill hoặc agent bạn đã cài | Giữ capability user/global và capability có sẵn trong project ở chế độ read-only; ưu tiên reuse/compose, chỉ tạo bản chuyên biệt có namespace riêng khi thật sự cần và được duyệt. |
 
 Các cơ chế này kết hợp hướng dẫn cho AI với script kiểm tra. Khả năng thực hiện còn phụ thuộc vào coding agent, mô hình và quyền công cụ bạn đang dùng.
 
@@ -66,7 +79,7 @@ Ví dụ: tài liệu ghi một lệnh chạy test, nhưng lệnh đó không c�
 |---|---|
 | Bộ nhớ và trạng thái dự án | Có thể tự cập nhật trong phạm vi được giao, dựa trên bằng chứng và qua kiểm tra bộ nhớ. |
 | Quy trình, skill hoặc quy tắc bắt buộc | Có thể đề xuất, soạn bản nháp và đánh giá; cần bạn phê duyệt trước khi kích hoạt hoặc áp dụng bắt buộc. |
-| Bộ quy tắc lõi hoặc phiên bản Agent Zero mới | Agent phải chủ động đề xuất khi chính rule gây cản trở; việc sửa core vẫn cần bạn duyệt, có bản sao để khôi phục và kiểm tra tương ứng. Bản hiện tại chưa có tự nâng cấp tại chỗ. |
+| Bộ quy tắc lõi hoặc phiên bản Agent Zero mới | Agent phải chủ động đề xuất khi chính rule gây cản trở; việc sửa core vẫn cần bạn duyệt, có bản sao để khôi phục và kiểm tra tương ứng. v0.11 có đường nâng cấp explicit từ v0.10, không tự chạy nền. |
 
 Việc cập nhật diễn ra khi agent đang thực hiện công việc. Bộ kit không có dịch vụ tự chạy nền khi bạn đã đóng công cụ AI.
 
@@ -103,6 +116,10 @@ Cơ chế chọn còn có điều kiện loại trừ và giới hạn dung lư�
 | Task và điểm tiếp tục | `.agent/STATE.md` |
 | Quy tắc tra cứu, giới hạn dung lượng | `.agent/CONTEXT_INDEX.md` |
 | Mục lục bài học và quyết định | `.agent/LESSONS.md`, `.agent/DECISIONS.md` |
+| Capability/routing liên quan | `.agent/CAPABILITIES.md` |
+| Skill và custom agent do Agent Zero quản lý | `.agent/SKILLS.md`, `.agent/SUBAGENTS.md` |
+| Bản nháp theo project | `.agent/skill-candidates/`, `.agent/subagent-candidates/` |
+| Asset active để host discover | `.agents/skills/`, `.codex/agents/` |
 | Nội dung chi tiết | `.agent/lessons/`, `.agent/decisions/` |
 | Lịch sử lưu trữ | `.agent/archive/` |
 
@@ -137,6 +154,8 @@ Agent Zero phải tự review governance khi rule gây blocking/repair lặp, us
 
 Một quy trình nhiều bước lặp lại có thể được đề xuất thành **skill**. Skill được soạn ở nơi dành cho bản nháp, kiểm tra lúc nào nên dùng và lúc nào không nên dùng, rồi mới xin bạn kích hoạt.
 
+Nếu user hoặc project đã có skill/custom agent tương tự, Agent Zero không ghi đè và không gộp hai nội dung cùng tên. Nó phân loại khả năng theo use case: dùng lại một provider đủ (`REUSE`), ghép các phần bổ sung không chồng lấn (`COMPOSE`), hoặc đề xuất một bản project-specific có namespace riêng (`SPECIALIZE`). Semantic/authority conflict được giữ nguyên để đúng owner quyết định. Theo core contract và validator, provider phải dùng parent-run accounting; khả năng load và thực thi provider thật vẫn phụ thuộc host/runtime.
+
 Nếu công cụ AI đang dùng hỗ trợ agent phụ, Agent Zero cũng có thể chia các việc độc lập cho chúng. Agent chính vẫn phải đọc kết quả, tích hợp và kiểm tra; số lượng và khả năng chạy song song phụ thuộc công cụ đó.
 
 Agent có thể tự xử lý những chi tiết nhỏ, có thể hoàn tác, trong phạm vi đã được giao. Những thay đổi như mục tiêu sản phẩm, phạm vi lớn, kiến trúc nền tảng, dịch vụ trả phí hoặc đưa thay đổi lên hệ thống thật cần đúng quyền phê duyệt.
@@ -169,11 +188,11 @@ Khi muốn kéo bản public mới nhất về **thư mục kit đã clone**, đ
 git -C .\agent-zero-kit pull --ff-only
 ```
 
-Trước mắt, lệnh này chỉ cập nhật bộ kit đã tải. Nó chưa tự thay thế các file Agent Zero đã được cài vào project; quy trình nâng cấp bản đã cài sẽ được xử lý ở phiên bản sau.
+Lệnh này chỉ cập nhật bộ kit đã tải. Nếu project đang dùng v0.10.0, xem mục “Muốn cập nhật lên bản Agent Zero mới thì sao?” bên dưới để chạy upgrade có snapshot.
 
 ### Cách 2 — Tải file ZIP
 
-1. Mở [trang Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest), tải file **`agent-zero-kit-v0.10.0.zip`** trong phần **Assets**.
+1. Mở [trang Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest), tải file **`agent-zero-kit-v0.11.1.zip`** trong phần **Assets**.
 2. Giải nén và copy **nguyên thư mục `agent-zero-kit`** vào thư mục gốc của project.
 3. Mở thư mục kit, nhấp đúp **`INSTALL.cmd`**, đọc đường dẫn project và xác nhận chế độ installer đề xuất.
 
@@ -219,7 +238,13 @@ Kit lưu bộ nhớ trong project local. Việc backup hoặc đồng bộ là q
 
 **Muốn cập nhật lên bản Agent Zero mới thì sao?**
 
-Theo dõi [Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases). Nếu đã tải bằng Git, chạy `git -C .\agent-zero-kit pull --ff-only` để kéo bản public mới về thư mục kit. Bản hiện tại chưa tự nâng cấp các file Agent Zero đã cài trong project; quy trình đó sẽ được xử lý sau và cần bảo toàn bộ nhớ dự án.
+Theo dõi [Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases). Nếu đã tải bằng Git, chạy `git -C .\agent-zero-kit pull --ff-only` để kéo bản public mới về thư mục kit. Với bản v0.10.0 đã cài, chạy explicit:
+
+```powershell
+& ".\agent-zero-kit\install-agent-zero.ps1" -TargetPath "." -UpgradeExisting
+```
+
+Installer chỉ hỗ trợ `0.10.0 -> 0.11.1`, snapshot trước và giữ nguyên project memory, user skill cùng custom agent. STATE schema 5 cũ chỉ được đọc ở compatibility mode và được migrate có kiểm chứng tại checkpoint sau; không có silent activation hay counter reset.
 
 ## Tài liệu và góp ý
 

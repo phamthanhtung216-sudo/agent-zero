@@ -10,6 +10,7 @@ Trước khi hỏi user, kiểm tra theo mức liên quan:
 - README, manifest, dependency files, config, entry points, tests, CI/CD và tài liệu hiện hữu.
 - Stack có thể suy ra, build/test/lint commands và constraints có bằng chứng.
 - Agent instructions, memory, decision log hoặc conventions đã tồn tại; nếu có thì dừng bootstrap mới và chuyển `ADOPTION`, không ghi đè.
+- Skill/custom agent đã có trong repository là context cần `ADOPTION`; catalog external/user không phải project context và không tự chuyển trạng thái. Không crawl home để tìm capability.
 
 Tóm tắt discovery theo bốn nhóm: `Đã xác minh`, `Suy luận cần xác nhận`, `Chưa biết nhưng quan trọng`, `Mâu thuẫn/rủi ro phát hiện được`. Không biến code hay tài liệu không có owner evidence thành product intent.
 
@@ -38,6 +39,8 @@ Khi không có adoption đang mở, tạo `.agent/` bằng template cài ở `.a
 - Archive indexes và detail roots theo template; không đưa history vào active index.
 
 Draft được phép tự tạo nhưng mọi nội dung chưa được xác nhận phải là `ASSUMED` hoặc `UNKNOWN`. Commands chưa chạy là `UNVERIFIED`.
+
+Catalog rỗng hoặc không liên quan giữ hành vi baseline và không tạo candidate/active root. Khi có gap lặp lại đủ evidence, Agent Zero chỉ draft skill/custom-agent project-local ngoài discovery root; activation cần eval và explicit approval. Capability do Agent Zero tạo dùng namespace `az-<project>-...` hoặc `az_<project>_...`; không copy external provider hay absolute personal path vào memory.
 
 ## Gate chuyển ACTIVE
 

@@ -1,4 +1,4 @@
-# Agent Zero v0.10.0 — Personal Testing
+# Agent Zero v0.11.1 — Personal Testing
 
 ## Mục tiêu
 
@@ -392,10 +392,84 @@ Kỳ vọng:
 - Trivial task đi `UNDERSTAND -> DIRECT_REPORT -> COMPLETE`, không checkpoint, retrieval, lesson, proposal hay memory transaction.
 - Standard task có một review; high-risk có checkpoint/rollback; profile chỉ nâng khi xuất hiện risk mới.
 - Repair là tổng toàn run và dừng ở 2 dù fingerprint, session hoặc agent thay đổi; review tối đa 2 và lần hai chỉ sau sửa.
+- Audit và remediation giữ cùng `Logical task ID`; bare `tiếp tục`, resume, compaction hay session reload không reset counter.
+- Sub-agent dùng tối đa ba lần start cộng dồn, kể cả child đã complete/fail; full matrix tối đa hai lần và lần hai chỉ sau failure cùng một repair tập trung.
 - Meta-review/proposal tối đa 1, không review proposal hoặc tạo meta-proposal; proposal dừng ở `AWAITING_USER_DECISION`.
 - `LEARN` trả `NO_DURABLE_LEARNING` và `SYNC` trả `NO_MEMORY_DELTA` khi không có durable delta.
-- Validator từ chối profile lạ, counter vượt ceiling, schema state cũ và terminal/status mismatch; normal lane có zero false-positive proposal.
+- Validator từ chối profile lạ, counter vượt ceiling, reset counter qua continuation, STATE schema 5 ở strict mode và terminal/status mismatch; compatibility mode chỉ dành cho installer upgrade.
 - Ghi số tool call, token, memory mutation và user interruption theo profile; structural PASS không tự thành cross-model `BEHAVIORALLY_VERIFIED`.
+
+## Scenario 32 — Coexistence với skill/custom agent có sẵn
+
+Chuẩn bị repo có một skill ở `.agents/skills/`, một custom agent ở `.codex/agents/` và catalog user/global do host cung cấp. Không thêm registry linkage Agent Zero cho các asset này.
+
+Kỳ vọng:
+
+- Agent Zero inventory theo metadata liên quan, giữ ownership `EXISTING_PROJECT|EXTERNAL_USER|EXTERNAL_ADMIN|EXTERNAL_SYSTEM`; asset không thuộc `AGENT_ZERO_PROJECT` không được Agent Zero mutate.
+- Không crawl home, copy provider body, lưu absolute personal path hoặc ép legacy skill/custom agent có `EVALS.md` của Agent Zero.
+- Validator chấp nhận repo provider unregistered và từ chối registry cố nhận ownership hoặc mutation quyền ngoài project.
+- Khi catalog rỗng/không liên quan, output/lifecycle/budget giữ behavior baseline v0.10.
+
+## Scenario 33 — Resolver cho capability trùng semantic
+
+Tạo catalog có provider đủ, provider bổ sung, provider trùng authority, provider `MISSING` và explicit user selection. Chạy `scripts/test-capability-resolution.ps1`.
+
+Kỳ vọng:
+
+- Một provider đủ cho `REUSE`; contribution bổ sung không chồng lấn cho `COMPOSE`; không chạy hai review loop trùng nhau “cho chắc”.
+- Chỉ `SPECIALIZE` khi delta project hợp lệ và lifecycle cho phép; tên project-generated có namespace riêng.
+- Conflict semantic/authority hoặc explicit provider không hợp lệ trả `CONFLICT`; `MISSING` chỉ `FALLBACK` khi caller có fallback evidence-equivalent.
+- Resolver thuần/read-only, deterministic, không tạo candidate/active asset và không đổi catalog input.
+
+## Scenario 34 — Project-specific skill và persistent sub-agent lifecycle
+
+Tạo skill candidate `az-<project>-<capability>` và custom-agent candidate `az_<project>_<role>` dưới `.agent/`, liên kết với provider/registry row rồi thử promote trước và sau approval.
+
+Kỳ vọng:
+
+- Candidate ngoài discovery root cho tới `APPROVED`; từ `EVALUATED`, candidate hash phải khớp payload/config, xuất hiện trong evaluation artifact, registry `Evals SHA256` phải khớp raw bytes của `EVALS.md`, và mọi PASS row phải có case/expected/evidence có nghĩa.
+- Không dùng tên `default|worker|explorer`, không silent pin model, MCP, `skills.config` hoặc sandbox ghi rộng.
+- Chỉ đúng registry-linked asset được Agent Zero quản lý; orphan candidate và duplicate visible name bị từ chối.
+- Fixture promotion chỉ pass khi evidence/candidate/active hash, approver, approval reference, destination và rollback provenance cross-bind; rollback phải trỏ đúng candidate của chính row. Active managed skill không chứa `EVALS.md`; evidence vẫn ở candidate path. Giá trị `Discovery verification: PASS` trong fixture chỉ chứng minh validator gate; fresh-session runtime chỉ pass khi có transcript/evidence từ phiên mới.
+- Sửa đồng thời evaluation artifact và hash bên trong `EVALS.md` nhưng không cập nhật lifecycle registry phải fail vì raw-byte `Evals SHA256`; hash này là tamper-evident tương đối với registry/VCS, không thay thế chữ ký hay trust anchor bên ngoài.
+
+## Scenario 35 — Parent-run accounting khi dùng provider/sub-agent
+
+Chạy một task có skill, custom agent và hai ephemeral sub-agent, trong đó một provider báo cần repair.
+
+Mức kiểm chứng phải tách `STRUCTURAL_FIXTURE` và `FRESH_SESSION_RUNTIME`. Resolver/validator ghi `INHERIT_PARENT_RUN` không đủ để đánh dấu Scenario này `PASS`; cần transcript một parent run thực sự. Nếu không kích hoạt persistent custom agent, ghi `PARTIAL` và để lane persistent/fresh-session là `NOT_RUN`.
+
+Kỳ vọng:
+
+- Agent Zero vẫn là sole orchestrator; provider không mở lifecycle, review loop, memory transaction hoặc verdict riêng.
+- Mọi work dùng `INHERIT_PARENT_RUN`, chung ceiling `2/2/1/1/1` và ba start cộng dồn/logical task; đổi provider, agent, session hoặc fingerprint không reset counter.
+- Capability route `FALLBACK` chỉ là thực thi tuần tự evidence-equivalent, không cho đổi model/reasoning.
+- Main agent đọc output/diff, xử lý conflict, chạy integration check và chịu verdict; child/provider output chỉ là evidence chưa kiểm chứng.
+
+## Scenario 36 — Upgrade v0.10.0 lên v0.11.1
+
+Chuẩn bị một active install và một adoption candidate v0.10.0, kèm user skill/custom agent. Chạy installer với `-UpgradeExisting`, sau đó cố ý làm post-copy validation fail.
+
+Kỳ vọng:
+
+- Upgrade chỉ chạy khi nhận diện đúng một core v0.10.0 bằng exact known-pristine SHA-256 và target payload là v0.11.1; core chỉ có marker, core đã chỉnh sửa hoặc mode bình thường đều bị từ chối overwrite và chuyển sang review/adoption.
+- Snapshot `.agent-zero/` và core tồn tại, hash khớp trước mutation; manifest ghi rollback và expected after hash.
+- `.agent/`, `.agents/skills/`, `.codex/agents/` và legacy context giữ byte-for-byte; hai registry vắng cho `LEGACY_COMPATIBILITY`, schema chỉ có một registry bị từ chối.
+- Validation fail restore v0.10.0 và verify restore; success giữ snapshot và yêu cầu phiên mới để nạp core.
+
+## Scenario 37 — Quota gate và một logical task
+
+Chạy fixture STATE schema 6 tại `79%`, `80%`, `90%` và `UNKNOWN`; mô phỏng audit rồi remediation, ba child đã kết thúc, bare `tiếp tục`, một full matrix fail, post-failure repair và yêu cầu tự đổi model.
+
+Kỳ vọng:
+
+- `79 -> NORMAL`, `80 -> WARNED_80`, `90 -> CHECKPOINT_90`, thiếu dữ liệu -> `UNKNOWN`; từ 80% có đúng một cảnh báo. Từ 90%, task đang làm bắt buộc ghi summary, exact next action và `USAGE_BELOW_90`, không có authorization bypass.
+- Bare `tiếp tục` ở 90% chỉ đọc quota một lần và giữ checkpoint, không tăng sub-agent/full-matrix counter; telemetry `UNKNOWN` tiếp tục giữ nguyên checkpoint, còn khi usage được xác nhận dưới 90% thì xóa quota checkpoint và resume cùng ID/counter.
+- Audit và remediation dùng một logical task; nếu quyền sửa đã cấp từ đầu thì không tạo task hoặc approval gate thứ hai.
+- Lần start thứ tư bị từ chối dù ba child trước đã complete/fail; `continue/resume`, compaction và session reload không giảm counter.
+- Khi sửa chỉ chạy focused checks. Canonical source pass trước khi rebuild dist; full matrix cuối chạy một lần. Lần hai chỉ được bắt đầu qua state chain `Matrix 1 FAIL -> PENDING -> repair count đúng +1 -> focused PASS -> VERIFIED`; trạng thái `PENDING` không được âm thầm tăng repair và metadata sau `VERIFIED` không được rebase, Matrix 1 PASS hoặc repair có trước failure không mở retry.
+- Báo cáo matrix tách riêng `Result`, `Attempts used` và `Conditional retry remaining`; không dùng `PASS 1/2` gây hiểu nhầm.
+- Quota không tự đổi model/reasoning. Tool output trong context chỉ chứa command, exit, PASS/FAIL và lỗi liên quan; log dài dùng evidence path.
 
 ## Ghi kết quả mỗi vòng
 
