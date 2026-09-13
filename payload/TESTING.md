@@ -1,4 +1,4 @@
-# Agent Zero v0.11.1 — Personal Testing
+# Agent Zero v0.12.0 — Personal Testing
 
 ## Mục tiêu
 
@@ -446,16 +446,15 @@ Kỳ vọng:
 - Capability route `FALLBACK` chỉ là thực thi tuần tự evidence-equivalent, không cho đổi model/reasoning.
 - Main agent đọc output/diff, xử lý conflict, chạy integration check và chịu verdict; child/provider output chỉ là evidence chưa kiểm chứng.
 
-## Scenario 36 — Upgrade v0.10.0 lên v0.11.1
+## Scenario 36 — Alias upgrade cũ đi qua updater mới
 
-Chuẩn bị một active install và một adoption candidate v0.10.0, kèm user skill/custom agent. Chạy installer với `-UpgradeExisting`, sau đó cố ý làm post-copy validation fail.
+Chuẩn bị active install hoặc adoption candidate ở một version có exact transition trong `UPDATE_MANIFEST.json`, kèm user skill/custom agent. Chạy installer với `-UpgradeExisting`.
 
 Kỳ vọng:
 
-- Upgrade chỉ chạy khi nhận diện đúng một core v0.10.0 bằng exact known-pristine SHA-256 và target payload là v0.11.1; core chỉ có marker, core đã chỉnh sửa hoặc mode bình thường đều bị từ chối overwrite và chuyển sang review/adoption.
-- Snapshot `.agent-zero/` và core tồn tại, hash khớp trước mutation; manifest ghi rollback và expected after hash.
-- `.agent/`, `.agents/skills/`, `.codex/agents/` và legacy context giữ byte-for-byte; hai registry vắng cho `LEGACY_COMPATIBILITY`, schema chỉ có một registry bị từ chối.
-- Validation fail restore v0.10.0 và verify restore; success giữ snapshot và yêu cầu phiên mới để nạp core.
+- `-UpgradeExisting` chỉ delegate sang cùng updater/manifest; không còn state machine nâng cấp khóa cứng riêng trong installer.
+- Core pristine dùng exact SHA-256 của transition. Core đã chỉnh sửa nâng lên `SEMANTIC_REVIEW`; version không có transition thành `UNSUPPORTED`.
+- `.agent/`, `.agents/`, `.codex/` giữ byte-for-byte trong `CORE_ONLY`; snapshot/journal được giữ và phiên mới được yêu cầu sau commit.
 
 ## Scenario 37 — Quota gate và một logical task
 
@@ -470,6 +469,20 @@ Kỳ vọng:
 - Khi sửa chỉ chạy focused checks. Canonical source pass trước khi rebuild dist; full matrix cuối chạy một lần. Lần hai chỉ được bắt đầu qua state chain `Matrix 1 FAIL -> PENDING -> repair count đúng +1 -> focused PASS -> VERIFIED`; trạng thái `PENDING` không được âm thầm tăng repair và metadata sau `VERIFIED` không được rebase, Matrix 1 PASS hoặc repair có trước failure không mở retry.
 - Báo cáo matrix tách riêng `Result`, `Attempts used` và `Conditional retry remaining`; không dùng `PASS 1/2` gây hiểu nhầm.
 - Quota không tự đổi model/reasoning. Tool output trong context chỉ chứa command, exit, PASS/FAIL và lỗi liên quan; log dài dùng evidence path.
+
+## Scenario 38 — Portable update và AI handoff
+
+Chạy `scripts/test-update-workflow.ps1` bằng PowerShell 7 và Windows PowerShell 5.1 với release fixture offline đã qua cùng manifest/hash gates như GitHub.
+
+Kỳ vọng:
+
+- `CheckOnly` phân biệt `UP_TO_DATE`, update available và `UNSUPPORTED`, hiện release summary/declared/local/effective mode nhưng không tạo transaction hoặc gọi AI.
+- Manifest sai, repository/tag/asset không khớp, checksum sai, ZIP path traversal/link hoặc manifest trong ZIP khác đều fail trước execution/activation.
+- `CORE_ONLY` snapshot rồi update core/payload; `.agent/`, `.agents/`, `.codex/` giữ byte-for-byte. `LOSSLESS_SCRIPTED` chạy migrator verified trong bản sao tạm và chỉ promote `.agent`; ghi ngoài allowlist phải fail mà không làm đổi live/staged memory.
+- Core drift local nâng mode thành `SEMANTIC_REVIEW`; updater tạo `AI_UPDATE_PROMPT.md`, không sửa live và không phụ thuộc nhà cung cấp AI. Finalizer đòi report, stage validation và explicit approval.
+- Prompt sinh tự động và prompt rescue là tiếng Việt không dấu/ASCII; cùng assertion phải pass trên PowerShell 7 và Windows PowerShell 5, không phụ thuộc ANSI code page.
+- Mọi cặp operation xung đột fail trước mutation; mutating run thứ hai bị khóa độc quyền từ chối và không được tạo transaction.
+- Live context đổi sau prepare gây `AZ-UPDATE-STALE_BASELINE`, không restore đè thay đổi mới. Journal `ACTIVATING|VALIDATING` bị ngắt được lần chạy sau rollback; recovery lặp lại là idempotent. Crash-gap thiếu `.agent-zero/UPDATE.cmd` vẫn rollback được bằng `.agent-zero-update/RECOVER.cmd`; state lạ không bị clear mù.
 
 ## Ghi kết quả mỗi vòng
 

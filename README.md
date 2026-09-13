@@ -8,20 +8,19 @@ Mục tiêu là giúp bạn bớt phải giải thích lại từ đầu, dễ b
 
 Agent Zero là bộ hướng dẫn, file bộ nhớ và công cụ kiểm tra chạy cùng một **coding agent** — tức trợ lý AI có thể đọc, sửa file và chạy lệnh trong dự án. Bạn vẫn cần một công cụ như Codex hoặc Claude Code để thực hiện công việc.
 
-**Bản hiện tại: v0.11.1 · Bộ cài Windows · Hướng dẫn bằng tiếng Việt**
+**Bản hiện tại: v0.12.0 · Bộ cài Windows · Hướng dẫn bằng tiếng Việt**
 
 [Cài bằng Git](#cài-đặt) · [Tải bộ cài ZIP](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest) · [Hướng dẫn chi tiết](START_HERE.md) · [Báo lỗi / góp ý](https://github.com/phamthanhtung216-sudo/agent-zero/issues)
 
-## Cập nhật v0.11.1
+## Cập nhật v0.12.0
 
-Phiên bản này tập trung giảm việc tiêu quota ngoài dự kiến khi Agent Zero audit hoặc sửa một project lớn:
+Phiên bản này bổ sung luồng update một nút nhưng vẫn tách stable core khỏi context riêng của user/project:
 
-- Audit và phần sửa tiếp theo giữ nguyên một task; lệnh `continue` hoặc mở lại phiên không tạo ngân sách mới. Toàn task chỉ được start tối đa ba sub-agent.
-- Khi mức dùng Codex đạt 80%, Agent Zero cảnh báo trước khi nhận việc lớn. Từ 90%, agent phải tóm tắt việc đang làm, ghi đúng bước tiếp theo rồi dừng phần tốn quota cho tới khi mức dùng được xác nhận đã xuống dưới 90%.
-- Full matrix thường chỉ chạy một lần ở cuối. Lượt thứ hai chỉ được phép nếu lượt đầu thất bại, đã có đúng một lần sửa tập trung và focused check đã PASS.
-- Agent Zero không tự đổi model hoặc reasoning để né quota. Installer hỗ trợ nâng cấp bản cài nguyên gốc từ v0.10.0 lên v0.11.1 với snapshot và giữ nguyên bộ nhớ, skill cùng custom agent của project.
-
-Các gate trên giúp giới hạn vòng lặp và giữ điểm tiếp tục rõ ràng; chúng không làm quota Codex tự reset và cũng không bảo đảm mọi workload sẽ dùng cùng một lượng quota.
+- `UPDATE.cmd` tự kiểm tra stable release, version, thay đổi và context impact; bước check không cần AI.
+- Không đoán “update nhỏ/lớn”. Manifest quy định exact transition và mức tối thiểu; evidence local chỉ có thể nâng mức theo `CORE_ONLY < LOSSLESS_SCRIPTED < SEMANTIC_REVIEW < UNSUPPORTED`.
+- Update tương thích có snapshot, staging, validation, live rehash và journal recovery. `.agent`, `.agents`, `.codex` không bị core-only update sửa.
+- Khi cần hiểu ngữ nghĩa, updater không sửa live mà copy prompt để user dán vào agent AI hiện tại, không khóa vào Codex hay nhà cung cấp cụ thể.
+- Manifest/checksum/ZIP/repository/tag sai, context đổi đồng thời hoặc validation fail đều làm updater safe-stop và giữ bản cũ/snapshot.
 
 ## Agent Zero giúp bạn làm gì?
 
@@ -33,6 +32,7 @@ Các gate trên giúp giới hạn vòng lặp và giữ điểm tiếp tục r�
 | AI nhận ra chính quy trình của nó đang cản việc | Review rule của Agent Zero, chủ động đưa proposal có bằng chứng và chờ bạn duyệt trước khi đổi core. |
 | AI không biến mọi câu hỏi thành quy trình dài | Chọn profile theo độ phức tạp, giới hạn số vòng review/repair và dừng ở terminal state rõ ràng. |
 | AI không âm thầm đốt quota khi audit lớn | Giữ audit+sửa trong một logical task, đếm tối đa ba lần start sub-agent, cảnh báo ở 80%; từ 90% lưu hiện trạng/next action rồi chờ quota giảm, không có bypass hoặc tự đổi model. |
+| Cập nhật mà không mất context | Kiểm tra bằng CMD, phân loại bằng manifest+drift local, chỉ activate sau snapshot/staging/validation; chỉ gọi AI cho semantic migration. |
 | Hiểu biết của AI theo kịp dự án | Cập nhật trạng thái và thông tin kỹ thuật khi có bằng chứng mới; chỉ ra mâu thuẫn cần bạn quyết định. |
 | Dự án lớn dần mà context vẫn có tổ chức | Chia bộ nhớ theo tầng, dùng mục lục và chỉ lấy những chi tiết phù hợp với công việc. |
 | Biết một việc đã thực sự xong chưa | Đặt tiêu chí hoàn thành, chạy kiểm tra và báo kết quả, lỗi hoặc phần còn thiếu. |
@@ -188,11 +188,11 @@ Khi muốn kéo bản public mới nhất về **thư mục kit đã clone**, đ
 git -C .\agent-zero-kit pull --ff-only
 ```
 
-Lệnh này chỉ cập nhật bộ kit đã tải. Nếu project đang dùng v0.10.0, xem mục “Muốn cập nhật lên bản Agent Zero mới thì sao?” bên dưới để chạy upgrade có snapshot.
+Lệnh này chỉ cập nhật checkout của bộ kit đã tải; nó không ghi vào bản Agent Zero đã cài trong `.agent-zero/`. Muốn cập nhật bản đã cài, dùng `UPDATE.cmd`.
 
 ### Cách 2 — Tải file ZIP
 
-1. Mở [trang Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest), tải file **`agent-zero-kit-v0.11.1.zip`** trong phần **Assets**.
+1. Mở [trang Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases/latest), tải file **`agent-zero-kit-v0.12.0.zip`** trong phần **Assets**.
 2. Giải nén và copy **nguyên thư mục `agent-zero-kit`** vào thư mục gốc của project.
 3. Mở thư mục kit, nhấp đúp **`INSTALL.cmd`**, đọc đường dẫn project và xác nhận chế độ installer đề xuất.
 
@@ -238,13 +238,9 @@ Kit lưu bộ nhớ trong project local. Việc backup hoặc đồng bộ là q
 
 **Muốn cập nhật lên bản Agent Zero mới thì sao?**
 
-Theo dõi [Releases](https://github.com/phamthanhtung216-sudo/agent-zero/releases). Nếu đã tải bằng Git, chạy `git -C .\agent-zero-kit pull --ff-only` để kéo bản public mới về thư mục kit. Với bản v0.10.0 đã cài, chạy explicit:
+Nhấp đúp `.agent-zero/UPDATE.cmd` trong project. CMD tự kiểm tra stable release mà không cần AI, hiện rõ thay đổi và mode, rồi chỉ update sau khi bạn xác nhận. Nếu đang giữ kit mới, có thể dùng `agent-zero-kit/UPDATE.cmd`.
 
-```powershell
-& ".\agent-zero-kit\install-agent-zero.ps1" -TargetPath "." -UpgradeExisting
-```
-
-Installer chỉ hỗ trợ `0.10.0 -> 0.11.1`, snapshot trước và giữ nguyên project memory, user skill cùng custom agent. STATE schema 5 cũ chỉ được đọc ở compatibility mode và được migrate có kiểm chứng tại checkpoint sau; không có silent activation hay counter reset.
+`CORE_ONLY` giữ project memory/capability byte-for-byte. `LOSSLESS_SCRIPTED` chỉ migrate staging. `SEMANTIC_REVIEW` tạo prompt để dán vào agent AI bạn đang dùng và chờ explicit acceptance. Nếu bản cũ chỉ có `UPDATE.md`, Markdown không tự chạy: mở file và copy prompt rescue. `git pull` chỉ kéo checkout kit, không phải thao tác update bản đã cài.
 
 ## Tài liệu và góp ý
 

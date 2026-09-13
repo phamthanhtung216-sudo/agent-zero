@@ -142,14 +142,23 @@ Installer không:
 
 Installer sẽ từ chối ghi file nếu phát hiện nguy cơ ghi đè, payload không đầy đủ, hoặc Agent Zero đã được cài trước đó mà không có yêu cầu upgrade explicit. Khi gặp trường hợp này, giữ nguyên project và đọc thông báo lỗi trước khi tiếp tục.
 
-## Nâng cấp bản v0.10.0 đã cài
+## Kiểm tra và cập nhật Agent Zero
 
-Sau khi thay thư mục kit bằng v0.11.1, chạy lệnh sau từ terminal:
+Sau khi cài v0.12.0, nút update bền vững nằm tại:
 
-```powershell
-& "D:\Projects\my-project\agent-zero-kit\install-agent-zero.ps1" -TargetPath "D:\Projects\my-project" -UpgradeExisting
+```text
+<project>\.agent-zero\UPDATE.cmd
 ```
 
-Đường này chỉ hỗ trợ `0.10.0 -> 0.11.1` và yêu cầu nhận diện đúng một core Agent Zero active hoặc candidate. Installer xác minh payload, snapshot core cùng `.agent-zero/` vào `.agent-zero-upgrade/snapshots/`, cập nhật các file Agent Zero sở hữu rồi validate. Nếu validation fail, bản v0.10.0 được restore và kiểm tra hash.
+Nhấp đúp file này. CMD tự kiểm tra bản stable mới nhất và hiện đủ: version hiện tại/mới, nội dung thay đổi, context impact, mode do release khai báo, evidence local và mode hiệu lực. Việc kiểm tra không mở hay cần AI.
 
-Upgrade không sửa `.agent/`, `.agents/skills/`, `.codex/agents/` hoặc capability user/global. Nếu hai registry capability mới đều chưa có, v0.11.1 chạy `LEGACY_COMPATIBILITY`; STATE schema 5 được giữ byte-for-byte và chỉ migrate sang schema 6 ở checkpoint được validate. Trạng thái chỉ có một registry bị từ chối vì đó là schema dang dở.
+- `CORE_ONLY`: snapshot rồi chỉ cập nhật core/payload Agent Zero; `.agent/`, `.agents/`, `.codex/` giữ byte-for-byte.
+- `LOSSLESS_SCRIPTED`: chạy migrator đã đóng gói trong bản sao tạm độc lập; chỉ nhận lại staged `.agent` khi boundary và validation cùng pass.
+- `SEMANTIC_REVIEW`: không sửa live; updater tạo/copy prompt để bạn dán vào agent AI đang dùng. Agent chỉ làm trong staging và phải xin bạn chấp nhận rõ trước finalization.
+- `UNSUPPORTED`: giữ bản hiện tại và hướng dẫn review; không cố ghi đè.
+
+Mọi update có thay đổi đều lấy khóa độc quyền, rehash context ngay trước activation, có transaction journal và giữ snapshot tại `.agent-zero-update/transactions/<id>/snapshot`. Nếu process bị ngắt khi đang activate, chạy lại `UPDATE.cmd`; updater phát hiện journal và rollback có kiểm chứng trước khi cho update mới. Nếu `.agent-zero/UPDATE.cmd` tạm biến mất giữa bước thay thế, nhấp đúp `.agent-zero-update/RECOVER.cmd`; launcher phục hồi này nằm ngoài cây đang swap và không cần AI.
+
+Trong kit mới tải cũng có `UPDATE.cmd`; nó dùng payload local đã verify. Tham số installer `-UpgradeExisting` chỉ là alias tương thích gọi cùng updater/manifest, không còn là logic nâng cấp riêng.
+
+Nếu bản cũ chỉ có file `UPDATE.md`, file Markdown không tự chạy và không tự tải GitHub. Mở file, copy prompt rescue rồi dán vào agent AI hiện tại. Agent sẽ ưu tiên updater có sẵn; nếu thiếu, nó phải tải đúng stable release, kiểm tra manifest/checksum/ZIP và chỉ thao tác qua staging. `git pull` chỉ cập nhật một checkout kit đã clone, không cập nhật bản đã cài trong `.agent-zero/`.

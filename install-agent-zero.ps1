@@ -14,6 +14,10 @@ $payloadRoot = Join-Path $kitRoot "payload"
 $candidateSource = Join-Path $kitRoot "AGENT_ZERO_CANDIDATE.md"
 $claudeAdapterSource = Join-Path $payloadRoot "adapters/CLAUDE.md"
 $startSource = Join-Path $payloadRoot "START.md"
+$updateLauncherSource = Join-Path $kitRoot "UPDATE.cmd"
+$updateGuideSource = Join-Path $kitRoot "UPDATE.md"
+$updateManifestSource = Join-Path $kitRoot "UPDATE_MANIFEST.json"
+$updateEngineSource = Join-Path $payloadRoot "scripts/update-agent-zero.ps1"
 $kitFullPath = [System.IO.Path]::GetFullPath($kitRoot)
 $targetWasProvided = $PSBoundParameters.ContainsKey("TargetPath") -and -not [string]::IsNullOrWhiteSpace($TargetPath)
 $interactiveMode = -not $targetWasProvided -and -not $NonInteractive
@@ -497,6 +501,10 @@ $requiredPayloadFiles = @(
     $candidateSource,
     $claudeAdapterSource,
     $startSource,
+    $updateLauncherSource,
+    $updateGuideSource,
+    $updateManifestSource,
+    $updateEngineSource,
     (Join-Path $payloadRoot "VERSION"),
     (Join-Path $payloadRoot "TESTING.md"),
     (Join-Path $payloadRoot "references/ADOPTION_PROTOCOL.md"),
@@ -685,9 +693,14 @@ $nextStepsDestination = Join-Path $agentZeroDestination "NEXT_STEPS.md"
 if ($UpgradeExisting) {
     Write-Host ""
     Write-Host "KET QUA KIEM TRA" -ForegroundColor Cyan
-    Write-Host "Che do: UPGRADE_EXISTING 0.10.0 -> 0.11.1" -ForegroundColor Green
-    Write-Host "Project memory, user skills va custom agents se duoc giu nguyen."
-    Invoke-AgentZeroUpgrade -ProjectRoot $targetFullPath -PayloadRoot $payloadRoot -CandidateSource $candidateSource -StartSource $startSource -WhatIf:$WhatIf
+    Write-Host "Che do: UPGRADE_EXISTING qua UPDATE_MANIFEST.json" -ForegroundColor Green
+    Write-Host "Updater se tu tinh effective mode; project memory, user skills va custom agents khong bi ghi de truc tiep."
+    if ($WhatIf) {
+        & $updateEngineSource -TargetPath $targetFullPath -LocalKitPath $kitRoot -CheckOnly -NonInteractive
+    }
+    else {
+        & $updateEngineSource -TargetPath $targetFullPath -LocalKitPath $kitRoot -Apply -NonInteractive
+    }
     $installationCommitted = -not $WhatIf
     return
 }
@@ -768,6 +781,9 @@ New-Item -ItemType Directory -Path $agentZeroDestination | Out-Null
 Copy-Item -LiteralPath (Join-Path $payloadRoot "VERSION") -Destination (Join-Path $agentZeroDestination "VERSION")
 Copy-Item -LiteralPath (Join-Path $payloadRoot "TESTING.md") -Destination (Join-Path $agentZeroDestination "TESTING.md")
 Copy-Item -LiteralPath $startSource -Destination (Join-Path $agentZeroDestination "START.md")
+Copy-Item -LiteralPath $updateLauncherSource -Destination (Join-Path $agentZeroDestination "UPDATE.cmd")
+Copy-Item -LiteralPath $updateGuideSource -Destination (Join-Path $agentZeroDestination "UPDATE.md")
+Copy-Item -LiteralPath $updateManifestSource -Destination (Join-Path $agentZeroDestination "UPDATE_MANIFEST.json")
 Copy-Item -LiteralPath (Join-Path $payloadRoot "references") -Destination (Join-Path $agentZeroDestination "references") -Recurse
 Copy-Item -LiteralPath (Join-Path $payloadRoot "templates") -Destination (Join-Path $agentZeroDestination "templates") -Recurse
 Copy-Item -LiteralPath (Join-Path $payloadRoot "scripts") -Destination (Join-Path $agentZeroDestination "scripts") -Recurse
@@ -836,7 +852,9 @@ $nextStepsLines = @(
     $activationPrompt,
     '```',
     "",
-    "Agent se doc ``.agent-zero/START.md``, xac nhan che do va huong dan ban tung buoc."
+    "Agent se doc ``.agent-zero/START.md``, xac nhan che do va huong dan ban tung buoc.",
+    "",
+    "Ve sau, nhap dup ``.agent-zero/UPDATE.cmd`` de kiem tra ban stable moi ma khong can mo AI."
 )
 if ($mode -eq "ADOPTION") {
     $nextStepsLines += @(

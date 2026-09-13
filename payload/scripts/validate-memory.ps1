@@ -561,8 +561,14 @@ if (Test-Path -LiteralPath $statePath -PathType Leaf) {
                 }
 
                 if ($hasPreviousFullMatrixRuns -and $fullMatrixRuns -eq $previousFullMatrixRuns -and $previousFullMatrixLastResult -eq "RUNNING" -and $fullMatrixLastResult -eq "FAIL") {
-                    if ($fullMatrixRuns -ne 1 -or $fullMatrixRetryState -ne "PENDING" -or $fullMatrixFailureRepairBaselineText -ne [string]$repairAttempt -or $fullMatrixRetryEvidence -ne "NONE") {
+                    if ($fullMatrixRuns -eq 1 -and ($fullMatrixRetryState -ne "PENDING" -or $fullMatrixFailureRepairBaselineText -ne [string]$repairAttempt -or $fullMatrixRetryEvidence -ne "NONE")) {
                         Add-ValidationError "AZ-MEMORY-VERIFY-SEQUENCE" "matrix 1 failure must open PENDING retry with the current repair count as its baseline"
+                    }
+                    elseif ($fullMatrixRuns -eq 2 -and $fullMatrixRetryState -ne "VERIFIED") {
+                        Add-ValidationError "AZ-MEMORY-VERIFY-SEQUENCE" "matrix 2 failure must preserve the VERIFIED retry chain"
+                    }
+                    elseif ($fullMatrixRuns -notin @(1, 2)) {
+                        Add-ValidationError "AZ-MEMORY-VERIFY-SEQUENCE" "a matrix failure can only close recorded attempt 1 or 2"
                     }
                 }
                 if ($previousFullMatrixRetryState -eq "PENDING" -and $fullMatrixRetryState -eq "VERIFIED") {

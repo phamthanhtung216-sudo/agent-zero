@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "product": "agent-zero",
+  "repository": "phamthanhtung216-sudo/agent-zero",
+  "channel": "stable",
+  "version": "0.12.0",
+  "tag": "v0.12.0",
+  "releaseType": "feature",
+  "requiresNewChat": true,
+  "targetCoreSha256": "1E1965CC6928D9B5A1468A5A4A0DF086523AF53AC9F3976A4623FE4DD6371BC6",
+  "display": {
+    "title": "Agent Zero v0.12.0 - Portable safe update",
+    "summary": "Kiem tra update bang CMD; bao toan context bang transaction; chi nho AI khi migration can hieu ngu nghia.",
+    "changes": [
+      "UPDATE.cmd kiem tra ban stable va noi dung thay doi ma khong can mo AI.",
+      "Updater xac minh release/hash, snapshot, staging, journal recovery va local-drift truoc activation.",
+      "Migration ngu nghia tao prompt trung lap nha cung cap de dan vao agent AI user dang dung."
+    ],
+    "contextImpact": "Khong doi schema project memory trong transition truc tiep; .agent, .agents va .codex duoc giu nguyen byte-for-byte.",
+    "releaseNotesUrl": "https://github.com/phamthanhtung216-sudo/agent-zero/releases/tag/v0.12.0"
+  },
+  "assets": {
+    "kit": "agent-zero-kit-v0.12.0.zip",
+    "manifest": "UPDATE_MANIFEST.json",
+    "checksums": "SHA256SUMS.txt"
+  },
+  "coreCandidates": [
+    "AGENTS.md",
+    "AGENT_ZERO_CANDIDATE.md"
+  ],
+  "protectedPaths": [
+    ".agent/**",
+    ".agents/**",
+    ".codex/**",
+    "CLAUDE.md"
+  ],
+  "managedPaths": [
+    ".agent-zero/**"
+  ],
+  "declaredMode": "CORE_ONLY",
+  "transitions": [
+    {
+      "from": "0.11.1",
+      "minimumMode": "CORE_ONLY",
+      "recognizedCoreSha256": [
+        "EAA75AF474928A5E762DE61A99FF49D1450B53C96FE6428C6F304963B8262C7D"
+      ],
+      "acceptedContextSchemas": [
+        6
+      ],
+      "contextAction": "PRESERVE_BYTES",
+      "migrator": null
+    },
+    {
+      "from": "0.10.0",
+      "minimumMode": "CORE_ONLY",
+      "recognizedCoreSha256": [
+        "FB0756CE6F5A2B705E7C95E926E15453CB3BFD54347A1FE2A666F8A3B78CF187"
+      ],
+      "acceptedContextSchemas": [
+        5,
+        6
+      ],
+      "contextAction": "PRESERVE_BYTES",
+      "migrator": null
+    }
+  ]
+}

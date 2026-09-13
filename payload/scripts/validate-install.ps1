@@ -31,6 +31,9 @@ $commonFiles = @(
     ".agent-zero/TESTING.md",
     ".agent-zero/START.md",
     ".agent-zero/NEXT_STEPS.md",
+    ".agent-zero/UPDATE.cmd",
+    ".agent-zero/UPDATE.md",
+    ".agent-zero/UPDATE_MANIFEST.json",
     ".agent-zero/references/ADOPTION_PROTOCOL.md",
     ".agent-zero/references/BOOTSTRAP_PROTOCOL.md",
     ".agent-zero/references/GOAL_GOVERNANCE.md",
@@ -64,7 +67,8 @@ $commonFiles = @(
     ".agent-zero/scripts/validate-subagent.ps1",
     ".agent-zero/scripts/validate-capabilities.ps1",
     ".agent-zero/scripts/resolve-capabilities.ps1",
-    ".agent-zero/scripts/select-context.ps1"
+    ".agent-zero/scripts/select-context.ps1",
+    ".agent-zero/scripts/update-agent-zero.ps1"
 )
 
 $modeFiles = if ($Mode -eq "NewProject") {
@@ -94,7 +98,7 @@ else {
     @("AGENTS.md")
 }
 if ($Mode -in @("UpgradeActive", "UpgradeCandidate")) {
-    $modeFiles = @($modeFiles) + @(".agent-zero/UPGRADE_RESULT.md")
+    $modeFiles = @($modeFiles) + @(".agent-zero/UPDATE_RESULT.md")
 }
 
 foreach ($relativePath in @($commonFiles + $modeFiles)) {
@@ -107,7 +111,48 @@ foreach ($relativePath in @($commonFiles + $modeFiles)) {
 $installedVersionPath = Join-Path $projectRoot ".agent-zero/VERSION"
 if (Test-Path -LiteralPath $installedVersionPath -PathType Leaf) {
     $installedVersion = (Get-Content -Raw -LiteralPath $installedVersionPath).Trim()
-    if ($installedVersion -ne "0.11.1") { $errors.Add("Installed VERSION must be 0.11.1, found: $installedVersion") }
+    if ($installedVersion -notmatch '^\d+\.\d+\.\d+$') {
+        $errors.Add("Installed VERSION must use MAJOR.MINOR.PATCH, found: $installedVersion")
+    }
+}
+
+$updateManifestPath = Join-Path $projectRoot ".agent-zero/UPDATE_MANIFEST.json"
+if (Test-Path -LiteralPath $updateManifestPath -PathType Leaf) {
+    try {
+        $updateManifest = Get-Content -Raw -LiteralPath $updateManifestPath | ConvertFrom-Json
+        if ($updateManifest.schema -ne 1 -or $updateManifest.product -ne "agent-zero") {
+            $errors.Add("Installed update manifest schema/product is invalid.")
+        }
+        if ([string]$updateManifest.version -ne [string]$installedVersion -or [string]$updateManifest.tag -ne "v$installedVersion") {
+            $errors.Add("Installed update manifest version/tag does not match VERSION.")
+        }
+        if ([string]$updateManifest.repository -ne "phamthanhtung216-sudo/agent-zero") {
+            $errors.Add("Installed update manifest repository identity is invalid.")
+        }
+    }
+    catch {
+        $errors.Add("Installed UPDATE_MANIFEST.json is invalid JSON: $($_.Exception.Message)")
+    }
+}
+
+$updateLauncherPath = Join-Path $projectRoot ".agent-zero/UPDATE.cmd"
+if (Test-Path -LiteralPath $updateLauncherPath -PathType Leaf) {
+    $updateLauncher = Get-Content -Raw -LiteralPath $updateLauncherPath
+    foreach ($marker in @("payload\scripts\update-agent-zero.ps1", "scripts\update-agent-zero.ps1", "LauncherOwnsFailurePause", "pause")) {
+        if (-not $updateLauncher.Contains($marker)) {
+            $errors.Add("Installed UPDATE.cmd is missing launcher marker: $marker")
+        }
+    }
+}
+
+$updateGuidePath = Join-Path $projectRoot ".agent-zero/UPDATE.md"
+if (Test-Path -LiteralPath $updateGuidePath -PathType Leaf) {
+    $updateGuide = Get-Content -Raw -LiteralPath $updateGuidePath
+    foreach ($marker in @("không phải file thực thi", "CORE_ONLY", "LOSSLESS_SCRIPTED", "SEMANTIC_REVIEW", "UNSUPPORTED", "agent AI đang dùng")) {
+        if (-not $updateGuide.Contains($marker)) {
+            $errors.Add("Installed UPDATE.md is missing update guidance marker: $marker")
+        }
+    }
 }
 
 $startPath = Join-Path $projectRoot ".agent-zero/START.md"
@@ -131,14 +176,14 @@ if (Test-Path -LiteralPath $nextStepsPath -PathType Leaf) {
 }
 
 if ($Mode -in @("UpgradeActive", "UpgradeCandidate")) {
-    $upgradeResultPath = Join-Path $projectRoot ".agent-zero/UPGRADE_RESULT.md"
+    $upgradeResultPath = Join-Path $projectRoot ".agent-zero/UPDATE_RESULT.md"
     if (Test-Path -LiteralPath $upgradeResultPath -PathType Leaf) {
         $upgradeResultText = Get-Content -Raw -LiteralPath $upgradeResultPath
         foreach ($marker in @(
-            '- From: `0.10.0`',
-            '- To: `0.11.1`',
-            '- Known-pristine v0.10.0 core SHA-256: `FB0756CE6F5A2B705E7C95E926E15453CB3BFD54347A1FE2A666F8A3B78CF187`',
-            '- Source core identity: `VERIFIED`'
+            "- To: $installedVersion",
+            "- Source core identity: VERIFIED",
+            "- Context activation:",
+            "- Snapshot retained:"
         )) {
             if (-not $upgradeResultText.Contains($marker)) {
                 $errors.Add("Installed upgrade result is missing identity evidence: $marker")
@@ -155,7 +200,7 @@ if (Test-Path -LiteralPath $corePath -PathType Leaf) {
     }
 
     $coreText = Get-Content -Raw -LiteralPath $corePath
-    foreach ($section in @("# Agent Zero v0.11.1", "## Stable core contract và project context", "## ADOPTION", "## Adaptive goal governance", "## Meta-review và cải tiến", "## Learning loop và bộ nhớ học tập riêng", "## Capability coexistence và resolver")) {
+    foreach ($section in @("# Agent Zero v$installedVersion", "## Stable core contract và project context", "## ADOPTION", "## Adaptive goal governance", "## Meta-review và cải tiến", "## Learning loop và bộ nhớ học tập riêng", "## Capability coexistence và resolver", "## Core update, release và kiểm chứng")) {
         if (-not $coreText.Contains($section)) {
             $errors.Add("Agent Zero core is missing section: $section")
         }
@@ -190,6 +235,15 @@ if (Test-Path -LiteralPath $corePath -PathType Leaf) {
             $errors.Add("AZ-CORE-POLICY-CAPABILITY: Agent Zero core is missing coexistence invariant marker: $marker")
         }
     }
+    foreach ($marker in @("CORE_ONLY < LOSSLESS_SCRIPTED < SEMANTIC_REVIEW < UNSUPPORTED", "UPDATE_MANIFEST.json", "CHECK", "stage -> validate -> activate", "journal", "rehash live context", "prompt trung lập nhà cung cấp", "semantic equivalence", "Markdown hướng dẫn không tự thực thi")) {
+        if (-not $coreText.Contains($marker)) {
+            $errors.Add("AZ-CORE-POLICY-UPDATE: Agent Zero core is missing update invariant marker: $marker")
+        }
+    }
+    if ($null -ne $updateManifest -and
+        (Get-FileHash -Algorithm SHA256 -LiteralPath $corePath).Hash -ne ([string]$updateManifest.targetCoreSha256).ToUpperInvariant()) {
+        $errors.Add("Installed core SHA-256 does not match UPDATE_MANIFEST.json.")
+    }
     $subAgentSectionMatches = [regex]::Matches($coreText, '(?ms)^##[ \t]+[^\r\n]*sub-agent[^\r\n]*\r?\n(?<body>.*?)(?=^##[ \t]|\z)')
     if ($subAgentSectionMatches.Count -ne 1) {
         $errors.Add("AZ-CORE-SECTION-SUBAGENT: Agent Zero core must contain exactly one sub-agent coordination section; found $($subAgentSectionMatches.Count).")
@@ -209,7 +263,7 @@ $installedReferenceRoot = Join-Path $agentZeroRoot "references"
 if ((Test-Path -LiteralPath $corePolicyValidatorPath -PathType Leaf) -and
     (Test-Path -LiteralPath $corePath -PathType Leaf) -and
     (Test-Path -LiteralPath $installedReferenceRoot -PathType Container)) {
-    & $corePolicyValidatorPath -CorePath $corePath -ReferenceRoot $installedReferenceRoot -ExpectedVersion "0.11.1" | Out-Null
+    & $corePolicyValidatorPath -CorePath $corePath -ReferenceRoot $installedReferenceRoot -ExpectedVersion $installedVersion | Out-Null
 }
 
 if ($Mode -eq "NewProject") {

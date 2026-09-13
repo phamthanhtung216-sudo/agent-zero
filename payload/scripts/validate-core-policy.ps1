@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$CorePath,
     [string]$ReferenceRoot,
-    [string]$ExpectedVersion = "0.11.1",
+    [string]$ExpectedVersion = "0.12.0",
     [int]$WarningBytes = 26624,
     [int]$HardBytes = 28672,
     [switch]$Quiet
@@ -123,7 +123,16 @@ $requiredMarkers = @(
     'integration check',
     'repair count',
     'explicit user approval',
-    'source/dist hash checks'
+    'source/dist hash checks',
+    'CORE_ONLY < LOSSLESS_SCRIPTED < SEMANTIC_REVIEW < UNSUPPORTED',
+    'UPDATE_MANIFEST.json',
+    'CHECK',
+    'stage -> validate -> activate',
+    'journal',
+    'rehash live context',
+    'prompt trung lập nhà cung cấp',
+    'semantic equivalence',
+    'Markdown hướng dẫn không tự thực thi'
 )
 
 foreach ($marker in $requiredMarkers) {

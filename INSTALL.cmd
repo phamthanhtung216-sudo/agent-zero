@@ -19,6 +19,11 @@ if not exist "%AZ_POWERSHELL%" (
     exit /b 1
 )
 
+rem Keep Windows PowerShell module discovery independent from the host shell.
+rem This prevents PowerShell 7 module paths from shadowing Windows PowerShell utilities.
+set "AZ_WINDOWS_PSMODULEPATH=%USERPROFILE%\Documents\WindowsPowerShell\Modules;%ProgramFiles%\WindowsPowerShell\Modules;%SystemRoot%\System32\WindowsPowerShell\v1.0\Modules"
+set "PSModulePath=%AZ_WINDOWS_PSMODULEPATH%"
+
 "%AZ_POWERSHELL%" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0install-agent-zero.ps1" -LauncherOwnsFailurePause %*
 set "AZ_INSTALL_EXIT=%ERRORLEVEL%"
 
